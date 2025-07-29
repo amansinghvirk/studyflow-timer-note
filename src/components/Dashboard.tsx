@@ -30,13 +30,15 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts'
-import type { StudySession } from '@/App'
+import type { StudySession, StreakData, Achievement } from '@/App'
 
 interface DashboardProps {
   sessions: StudySession[]
+  streakData?: StreakData
+  achievements?: Achievement[]
 }
 
-export function Dashboard({ sessions }: DashboardProps) {
+export function Dashboard({ sessions, streakData, achievements }: DashboardProps) {
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'all'>('week')
   const [selectedTopic, setSelectedTopic] = useState<string>('all')
 
@@ -180,8 +182,15 @@ export function Dashboard({ sessions }: DashboardProps) {
       totalHours: Math.round(topic.totalDuration / 60 * 10) / 10
     }))
 
-    // Streaks and achievements
-    const streakData = calculateStudyStreak(sessions)
+    // Use provided streak data or calculate if not available
+    const streakInfo = streakData || {
+      currentStreak: 0,
+      longestStreak: 0,
+      lastStudyDate: null,
+      totalRewards: 0,
+      weeklyGoal: 5,
+      weeklyProgress: 0
+    }
 
     return {
       totalSessions,
@@ -193,7 +202,7 @@ export function Dashboard({ sessions }: DashboardProps) {
       weeklyStats,
       monthlyStats,
       topicStats,
-      streakData,
+      streakInfo,
       dailyTrendData,
       topicDistribution,
       performanceData
@@ -295,7 +304,7 @@ export function Dashboard({ sessions }: DashboardProps) {
             <CardTitle className="text-sm font-ui font-medium">Current Streak</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-display font-bold">{stats.streakData.current} days</div>
+            <div className="text-2xl font-display font-bold">{stats.streakInfo.currentStreak} days</div>
             <p className="text-xs text-muted-foreground font-ui">
               Keep it up!
             </p>
@@ -308,7 +317,7 @@ export function Dashboard({ sessions }: DashboardProps) {
             <CardTitle className="text-sm font-ui font-medium">Best Streak</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-display font-bold">{stats.streakData.longest} days</div>
+            <div className="text-2xl font-display font-bold">{stats.streakInfo.longestStreak} days</div>
             <p className="text-xs text-muted-foreground font-ui">
               Personal record
             </p>
@@ -317,9 +326,24 @@ export function Dashboard({ sessions }: DashboardProps) {
 
         <Card>
           <CardHeader className="flex flex-row items-center space-y-0 pb-2">
-            <BookOpen className="h-5 w-5 text-blue-500 mr-2" />
-            <CardTitle className="text-sm font-ui font-medium">Topics Explored</CardTitle>
+            <Trophy className="h-5 w-5 text-purple-500 mr-2" />
+            <CardTitle className="text-sm font-ui font-medium">Achievements</CardTitle>
           </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-display font-bold">{achievements?.length || 0}</div>
+            <p className="text-xs text-muted-foreground font-ui">
+              Unlocked
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Topics Explored */}
+      <Card>
+        <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+          <BookOpen className="h-5 w-5 text-blue-500 mr-2" />
+          <CardTitle className="text-sm font-ui font-medium">Topics Explored</CardTitle>
+        </CardHeader>
           <CardContent>
             <div className="text-2xl font-display font-bold">{stats.uniqueTopics}</div>
             <p className="text-xs text-muted-foreground font-ui">

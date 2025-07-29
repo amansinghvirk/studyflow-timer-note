@@ -48,6 +48,12 @@
 ### Comprehensive Analytics Dashboard
 - **Functionality**: Statistical analysis showing daily, weekly, monthly session patterns, topic-wise breakdowns, study streaks, and average session durations
 - **Purpose**: Provides actionable insights into study habits and productivity patterns to optimize learning
+- **Success Criteria**: Users can identify their most productive periods and adjust study schedules accordingly
+
+### Study Streak Tracking & Rewards System
+- **Functionality**: Gamified tracking of consecutive study days with achievement unlocking and progress visualization
+- **Purpose**: Motivates consistent daily study habits through positive reinforcement and goal setting
+- **Success Criteria**: Users maintain longer study streaks and feel motivated by achievement progression
 - **Success Criteria**: Users can identify their most productive study periods, track consistency, and see progress across different subjects
 
 ### External Database Integration
