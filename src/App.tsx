@@ -46,6 +46,7 @@ export interface AppSettings {
   sessionsUntilLongBreak: number
   autoStartBreaks: boolean
   audioNotifications: boolean
+  distractionFreeMode: boolean
   externalDatabase?: {
     type: string
     connectionString: string
@@ -61,7 +62,8 @@ function App() {
     longBreakDuration: 15,
     sessionsUntilLongBreak: 4,
     autoStartBreaks: false,
-    audioNotifications: true
+    audioNotifications: true,
+    distractionFreeMode: false
   })
   const [topics, setTopics] = useKV<string[]>('study-topics', [])
   const [subtopics, setSubtopics] = useKV<Record<string, string[]>>('study-subtopics', {})

@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
-import { Play, Pause, Square, SkipForward, Coffee, BookOpen } from '@phosphor-icons/react'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Play, Pause, Square, SkipForward, Coffee, BookOpen, Eye, EyeSlash, Settings } from '@phosphor-icons/react'
 import { RichTextEditor } from '@/components/RichTextEditor'
 import { toast } from 'sonner'
 import type { StudySession, AppSettings } from '@/App'
@@ -43,6 +44,7 @@ export function StudyTimer({
   const [showEditor, setShowEditor] = useState(false)
   const [completedSessions, setCompletedSessions] = useState(0)
   const [currentCycle, setCurrentCycle] = useState(1)
+  const [localDistractionFree, setLocalDistractionFree] = useState(false)
   
   const intervalRef = useRef<NodeJS.Timeout>()
   const startTimeRef = useRef<Date>()
@@ -83,6 +85,27 @@ export function StudyTimer({
       }
     }
   }, [timerState])
+
+  // Keyboard shortcuts for distraction-free mode
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + D to toggle distraction-free mode during active sessions
+      if ((e.ctrlKey || e.metaKey) && e.key === 'd' && 
+          sessionType === 'study' && timerState === 'running') {
+        e.preventDefault()
+        toggleDistractionFree()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyPress)
+    return () => window.removeEventListener('keydown', handleKeyPress)
+  }, [sessionType, timerState, localDistractionFree])
+
+  // Toggle local distraction-free mode
+  const toggleDistractionFree = () => {
+    setLocalDistractionFree(!localDistractionFree)
+    toast.info(!localDistractionFree ? 'Distraction-free mode enabled' : 'Distraction-free mode disabled')
+  }
 
   const playNotificationSound = (frequency = 800) => {
     if (settings.audioNotifications) {
@@ -267,6 +290,98 @@ export function StudyTimer({
 
   // Show split layout when timer is running/paused and it's a study session
   const showSplitLayout = showEditor && sessionType === 'study' && (timerState === 'running' || timerState === 'paused')
+  
+  // Determine if we should show in distraction-free mode
+  const isDistractionFree = (settings.distractionFreeMode || localDistractionFree) && 
+                           (timerState === 'running') && 
+                           sessionType === 'study'
+
+  if (showSplitLayout && isDistractionFree) {
+    return (
+      <div className="flex gap-6 h-[calc(100vh-200px)]">
+        {/* Minimal Timer Pane - Distraction Free */}
+        <div className="w-64 flex-shrink-0">
+          <Card className="h-full bg-muted/30 border-none shadow-sm">
+            <CardContent className="h-full flex flex-col justify-center items-center space-y-4 p-6">
+              {/* Ultra minimal timer display */}
+              <div className="text-center">
+                <div className="font-mono text-3xl font-bold text-foreground mb-2">
+                  {formatTime(timeLeft)}
+                </div>
+                <div className="w-32 h-1 bg-muted rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-accent transition-all duration-1000 ease-linear"
+                    style={{ width: `${progressPercentage}%` }}
+                  />
+                </div>
+              </div>
+              
+              {/* Minimal session info */}
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground font-ui">Studying</p>
+                <p className="text-sm font-display font-medium text-foreground">
+                  {selectedTopic}
+                </p>
+                <p className="text-xs text-muted-foreground font-ui">
+                  {selectedSubtopic}
+                </p>
+              </div>
+
+              {/* Minimal controls - only show on hover */}
+              <TooltipProvider>
+                <div className="opacity-0 hover:opacity-100 transition-opacity duration-300 space-y-2">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        onClick={pauseTimer} 
+                        variant="ghost" 
+                        size="sm"
+                        className="w-8 h-8 p-0"
+                      >
+                        <Pause size={14} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Pause</TooltipContent>
+                  </Tooltip>
+                  
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        onClick={toggleDistractionFree} 
+                        variant="ghost" 
+                        size="sm"
+                        className="w-8 h-8 p-0"
+                      >
+                        <Eye size={14} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Show controls (Ctrl+D)</TooltipContent>
+                  </Tooltip>
+                </div>
+              </TooltipProvider>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Full-width Notes Pane - Distraction Free */}
+        <div className="flex-1 min-w-0">
+          <Card className="h-full flex flex-col border-none shadow-sm">
+            <CardContent className="flex-1 overflow-hidden p-6">
+              <div className="h-full overflow-auto">
+                <RichTextEditor
+                  content={notes}
+                  onChange={setNotes}
+                  placeholder="Focus on your notes..."
+                  className="h-full"
+                  editorHeight="100%"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
 
   if (showSplitLayout) {
     return (
@@ -316,59 +431,89 @@ export function StudyTimer({
 
               {/* Compact Timer Controls */}
               <div className="space-y-2">
-                {timerState === 'running' && (
-                  <>
-                    <Button 
-                      onClick={pauseTimer} 
-                      variant="secondary" 
-                      size="sm"
-                      className="w-full flex items-center gap-2 font-ui"
-                    >
-                      <Pause size={16} />
-                      Pause
-                    </Button>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button 
-                        onClick={stopTimer} 
-                        variant="destructive" 
-                        size="sm"
-                        className="flex items-center gap-1 font-ui text-xs"
-                      >
-                        <Square size={14} />
-                        Stop
-                      </Button>
-                      <Button 
-                        onClick={skipToNotes} 
-                        variant="outline" 
-                        size="sm"
-                        className="flex items-center gap-1 font-ui text-xs"
-                      >
-                        <SkipForward size={14} />
-                        Finish
-                      </Button>
-                    </div>
-                  </>
+                {/* Show indicator if global distraction-free mode is enabled */}
+                {settings.distractionFreeMode && (
+                  <div className="text-center">
+                    <Badge variant="outline" className="text-xs">
+                      <EyeSlash size={10} className="mr-1" />
+                      Auto-Focus Mode
+                    </Badge>
+                  </div>
                 )}
-
-                {timerState === 'paused' && (
+                
+                {!isDistractionFree && (
                   <>
-                    <Button 
-                      onClick={resumeTimer} 
-                      size="sm"
-                      className="w-full flex items-center gap-2 font-ui"
-                    >
-                      <Play size={16} />
-                      Resume
-                    </Button>
-                    <Button 
-                      onClick={stopTimer} 
-                      variant="destructive" 
-                      size="sm"
-                      className="w-full flex items-center gap-2 font-ui"
-                    >
-                      <Square size={16} />
-                      Stop
-                    </Button>
+                    {timerState === 'running' && (
+                      <>
+                        <Button 
+                          onClick={pauseTimer} 
+                          variant="secondary" 
+                          size="sm"
+                          className="w-full flex items-center gap-2 font-ui"
+                        >
+                          <Pause size={16} />
+                          Pause
+                        </Button>
+                        <div className="grid grid-cols-3 gap-2">
+                          <Button 
+                            onClick={stopTimer} 
+                            variant="destructive" 
+                            size="sm"
+                            className="flex items-center gap-1 font-ui text-xs"
+                          >
+                            <Square size={12} />
+                            Stop
+                          </Button>
+                          <Button 
+                            onClick={skipToNotes} 
+                            variant="outline" 
+                            size="sm"
+                            className="flex items-center gap-1 font-ui text-xs"
+                          >
+                            <SkipForward size={12} />
+                            Finish
+                          </Button>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  onClick={toggleDistractionFree} 
+                                  variant="ghost" 
+                                  size="sm"
+                                  className="flex items-center gap-1 font-ui text-xs"
+                                >
+                                  <EyeSlash size={12} />
+                                  Focus
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Hide controls for better focus (Ctrl+D)</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      </>
+                    )}
+
+                    {timerState === 'paused' && (
+                      <>
+                        <Button 
+                          onClick={resumeTimer} 
+                          size="sm"
+                          className="w-full flex items-center gap-2 font-ui"
+                        >
+                          <Play size={16} />
+                          Resume
+                        </Button>
+                        <Button 
+                          onClick={stopTimer} 
+                          variant="destructive" 
+                          size="sm"
+                          className="w-full flex items-center gap-2 font-ui"
+                        >
+                          <Square size={16} />
+                          Stop
+                        </Button>
+                      </>
+                    )}
                   </>
                 )}
               </div>

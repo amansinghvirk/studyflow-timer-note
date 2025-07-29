@@ -258,6 +258,25 @@ export function Settings({
                 </div>
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="distraction-free-mode" className="font-ui">Distraction-Free Mode</Label>
+                <div className="flex items-center gap-3">
+                  <Switch
+                    id="distraction-free-mode"
+                    checked={settings.distractionFreeMode}
+                    onCheckedChange={(checked) => updateSettings({ distractionFreeMode: checked })}
+                  />
+                  <div className="flex-1">
+                    <span className="text-sm text-muted-foreground font-ui">
+                      Hide timer controls during active sessions for better focus
+                    </span>
+                    <p className="text-xs text-muted-foreground font-ui mt-1">
+                      Use <kbd className="px-1 py-0.5 bg-muted rounded text-xs">Ctrl+D</kbd> to toggle during study sessions
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div className="space-y-3">
                 <Label className="font-ui">Quick Settings</Label>
                 <div className="space-y-2">
