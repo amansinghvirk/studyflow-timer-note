@@ -6,6 +6,7 @@ import { SessionHistory } from '@/components/SessionHistory'
 import { Settings } from '@/components/Settings'
 import { Dashboard } from '@/components/Dashboard'
 import { StreakTracker } from '@/components/StreakTracker'
+import { SessionNotes } from '@/components/SessionNotes'
 import { Clock, BookOpen, History, Settings as SettingsIcon, ChartBar, Flame } from '@phosphor-icons/react'
 import { Toaster } from '@/components/ui/sonner'
 import { toast } from 'sonner'
@@ -315,13 +316,7 @@ function App() {
           </TabsContent>
 
           <TabsContent value="notes" className="space-y-6">
-            <div className="text-center py-12">
-              <BookOpen size={48} className="mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-xl font-display font-semibold mb-2">Notes Editor</h3>
-              <p className="text-muted-foreground font-ui">
-                Start a study session to access the rich text editor
-              </p>
-            </div>
+            <SessionNotes sessions={sessions} />
           </TabsContent>
 
           <TabsContent value="streaks" className="space-y-6">

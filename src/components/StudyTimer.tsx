@@ -49,6 +49,14 @@ export function StudyTimer({
   const intervalRef = useRef<NodeJS.Timeout>()
   const startTimeRef = useRef<Date>()
 
+  // Show split layout when timer is running/paused and it's a study session
+  const showSplitLayout = showEditor && sessionType === 'study' && (timerState === 'running' || timerState === 'paused')
+  
+  // Determine if we should show in distraction-free mode
+  const isDistractionFree = (settings.distractionFreeMode || localDistractionFree) && 
+                           (timerState === 'running') && 
+                           sessionType === 'study'
+
   useEffect(() => {
     if (sessionType === 'study') {
       setTimeLeft(settings.defaultDuration * 60)
@@ -95,11 +103,21 @@ export function StudyTimer({
         e.preventDefault()
         toggleDistractionFree()
       }
+      
+      // Space bar to pause/resume in distraction-free mode
+      if (e.code === 'Space' && isDistractionFree && sessionType === 'study') {
+        e.preventDefault()
+        if (timerState === 'running') {
+          pauseTimer()
+        } else if (timerState === 'paused') {
+          resumeTimer()
+        }
+      }
     }
 
     window.addEventListener('keydown', handleKeyPress)
     return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [sessionType, timerState, localDistractionFree])
+  }, [sessionType, timerState, localDistractionFree, settings.distractionFreeMode])
 
   // Toggle local distraction-free mode
   const toggleDistractionFree = () => {
@@ -288,96 +306,78 @@ export function StudyTimer({
     ? subtopics[selectedTopic] || [] 
     : []
 
-  // Show split layout when timer is running/paused and it's a study session
-  const showSplitLayout = showEditor && sessionType === 'study' && (timerState === 'running' || timerState === 'paused')
-  
-  // Determine if we should show in distraction-free mode
-  const isDistractionFree = (settings.distractionFreeMode || localDistractionFree) && 
-                           (timerState === 'running') && 
-                           sessionType === 'study'
-
   if (showSplitLayout && isDistractionFree) {
     return (
-      <div className="flex gap-6 h-[calc(100vh-200px)]">
-        {/* Minimal Timer Pane - Distraction Free */}
-        <div className="w-64 flex-shrink-0">
-          <Card className="h-full bg-muted/30 border-none shadow-sm">
-            <CardContent className="h-full flex flex-col justify-center items-center space-y-4 p-6">
-              {/* Ultra minimal timer display */}
-              <div className="text-center">
-                <div className="font-mono text-3xl font-bold text-foreground mb-2">
-                  {formatTime(timeLeft)}
-                </div>
-                <div className="w-32 h-1 bg-muted rounded-full overflow-hidden">
+      <div className="h-[calc(100vh-120px)] flex flex-col">
+        {/* Minimal Top Timer Bar - Distraction Free */}
+        <div className="w-full bg-muted/20 border-b border-border/50 p-3 flex-shrink-0">
+          <div className="flex items-center justify-between max-w-6xl mx-auto">
+            <div className="flex items-center gap-4">
+              <div className="font-mono text-2xl font-bold text-foreground">
+                {formatTime(timeLeft)}
+              </div>
+              <div className="flex-1 max-w-48">
+                <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-accent transition-all duration-1000 ease-linear"
+                    className="h-full bg-accent transition-all duration-1000 ease-linear rounded-full"
                     style={{ width: `${progressPercentage}%` }}
                   />
                 </div>
               </div>
-              
-              {/* Minimal session info */}
-              <div className="text-center">
-                <p className="text-xs text-muted-foreground font-ui">Studying</p>
-                <p className="text-sm font-display font-medium text-foreground">
-                  {selectedTopic}
-                </p>
-                <p className="text-xs text-muted-foreground font-ui">
-                  {selectedSubtopic}
-                </p>
+              <div className="text-sm text-muted-foreground font-ui">
+                {selectedTopic} · {selectedSubtopic}
               </div>
-
-              {/* Minimal controls - only show on hover */}
+            </div>
+            
+            <div className="flex items-center gap-2">
               <TooltipProvider>
-                <div className="opacity-0 hover:opacity-100 transition-opacity duration-300 space-y-2">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        onClick={pauseTimer} 
-                        variant="ghost" 
-                        size="sm"
-                        className="w-8 h-8 p-0"
-                      >
-                        <Pause size={14} />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Pause</TooltipContent>
-                  </Tooltip>
-                  
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        onClick={toggleDistractionFree} 
-                        variant="ghost" 
-                        size="sm"
-                        className="w-8 h-8 p-0"
-                      >
-                        <Eye size={14} />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Show controls (Ctrl+D)</TooltipContent>
-                  </Tooltip>
-                </div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      onClick={pauseTimer} 
+                      variant="ghost" 
+                      size="sm"
+                      className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                    >
+                      <Pause size={16} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Pause (Space)</TooltipContent>
+                </Tooltip>
               </TooltipProvider>
-            </CardContent>
-          </Card>
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      onClick={toggleDistractionFree} 
+                      variant="ghost" 
+                      size="sm"
+                      className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                    >
+                      <Eye size={16} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Show controls (Ctrl+D)</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </div>
         </div>
 
         {/* Full-width Notes Pane - Distraction Free */}
-        <div className="flex-1 min-w-0">
-          <Card className="h-full flex flex-col border-none shadow-sm">
-            <CardContent className="flex-1 overflow-hidden p-6">
-              <div className="h-full overflow-auto">
-                <RichTextEditor
-                  content={notes}
-                  onChange={setNotes}
-                  placeholder="Focus on your notes..."
-                  className="h-full"
-                  editorHeight="100%"
-                />
-              </div>
-            </CardContent>
-          </Card>
+        <div className="flex-1 min-h-0 p-4">
+          <div className="h-full bg-card rounded-lg border">
+            <div className="h-full p-6">
+              <RichTextEditor
+                content={notes}
+                onChange={setNotes}
+                placeholder="Focus on your notes..."
+                className="h-full"
+                editorHeight="100%"
+              />
+            </div>
+          </div>
         </div>
       </div>
     )
