@@ -10,6 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
+import { RichTextEditor } from '@/components/RichTextEditor'
 import { 
   DownloadSimple, 
   FileText, 
@@ -156,13 +157,10 @@ export function SessionNotes({ sessions, onEditSession, onDeleteSession }: Sessi
     setDownloadAllDialogOpen(true)
   }
 
-  const downloadMarkdown = (session: StudySession) => {
+  const downloadMarkdown = async (session: StudySession) => {
     try {
       const markdown = generateMarkdown([session])
-      downloadFile(markdown, `${session.topic}-${session.subtopic}-${formatDate(session.completedAt)}.md`, 'text/markdown')
-      toast.success('Note downloaded as Markdown!', {
-        description: 'Check your Downloads folder or browser downloads'
-      })
+      await downloadFile(markdown, `${session.topic}-${session.subtopic}-${formatDate(session.completedAt)}.md`, 'text/markdown')
     } catch (error) {
       toast.error('Failed to download Markdown file')
     }
@@ -171,10 +169,7 @@ export function SessionNotes({ sessions, onEditSession, onDeleteSession }: Sessi
   const downloadHTML = async (session: StudySession) => {
     try {
       const html = generateHTML([session])
-      downloadFile(html, `${session.topic}-${session.subtopic}-${formatDate(session.completedAt)}.html`, 'text/html')
-      toast.success('Note downloaded as HTML!', {
-        description: 'Check your Downloads folder or browser downloads'
-      })
+      await downloadFile(html, `${session.topic}-${session.subtopic}-${formatDate(session.completedAt)}.html`, 'text/html')
     } catch (error) {
       toast.error('Failed to download HTML file')
     }
@@ -185,9 +180,8 @@ export function SessionNotes({ sessions, onEditSession, onDeleteSession }: Sessi
     try {
       const html = generateHTML([session])
       await generatePDF(html, `${session.topic}-${session.subtopic}-${formatDate(session.completedAt)}.pdf`)
-      toast.success('Note downloaded as PDF!', { 
-        id: 'pdf-gen',
-        description: 'Check your Downloads folder or browser downloads'
+      toast.success('PDF saved successfully!', { 
+        id: 'pdf-gen'
       })
     } catch (error) {
       console.error('PDF generation error:', error)
@@ -198,7 +192,7 @@ export function SessionNotes({ sessions, onEditSession, onDeleteSession }: Sessi
     }
   }
 
-  const downloadAllMarkdown = () => {
+  const downloadAllMarkdown = async () => {
     if (filteredSessions.length === 0) {
       toast.error('No notes to download')
       return
@@ -210,16 +204,13 @@ export function SessionNotes({ sessions, onEditSession, onDeleteSession }: Sessi
         ? `study-notes-filtered-${new Date().toISOString().split('T')[0]}.md`
         : `all-study-notes-${new Date().toISOString().split('T')[0]}.md`
       
-      downloadFile(markdown, filename, 'text/markdown')
-      toast.success(`Downloaded ${filteredSessions.length} notes as Markdown!`, {
-        description: 'Check your Downloads folder or browser downloads'
-      })
+      await downloadFile(markdown, filename, 'text/markdown')
     } catch (error) {
       toast.error('Failed to download Markdown file')
     }
   }
 
-  const downloadAllHTML = () => {
+  const downloadAllHTML = async () => {
     if (filteredSessions.length === 0) {
       toast.error('No notes to download')
       return
@@ -231,10 +222,7 @@ export function SessionNotes({ sessions, onEditSession, onDeleteSession }: Sessi
         ? `study-notes-filtered-${new Date().toISOString().split('T')[0]}.html`
         : `all-study-notes-${new Date().toISOString().split('T')[0]}.html`
       
-      downloadFile(html, filename, 'text/html')
-      toast.success(`Downloaded ${filteredSessions.length} notes as HTML!`, {
-        description: 'Check your Downloads folder or browser downloads'
-      })
+      await downloadFile(html, filename, 'text/html')
     } catch (error) {
       toast.error('Failed to download HTML file')
     }
@@ -254,9 +242,8 @@ export function SessionNotes({ sessions, onEditSession, onDeleteSession }: Sessi
         : `all-study-notes-${new Date().toISOString().split('T')[0]}.pdf`
       
       await generatePDF(html, filename)
-      toast.success(`Downloaded ${filteredSessions.length} notes as PDF!`, { 
-        id: 'pdf-all-gen',
-        description: 'Check your Downloads folder or browser downloads'
+      toast.success('PDF saved successfully!', { 
+        id: 'pdf-all-gen'
       })
     } catch (error) {
       console.error('PDF generation error:', error)
@@ -602,22 +589,9 @@ export function SessionNotes({ sessions, onEditSession, onDeleteSession }: Sessi
         pdf.addImage(imgData, 'PNG', 10, 10, pdfWidth - 20, scaledHeight)
       }
       
-      // Trigger download with save dialog
+      // Generate PDF as blob and trigger save dialog
       const pdfBlob = pdf.output('blob')
-      const url = URL.createObjectURL(pdfBlob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = filename
-      link.style.display = 'none'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
-      
-      // Close download dialog
-      setDownloadDialogOpen(false)
-      setDownloadAllDialogOpen(false)
-      setDownloadSessionId(null)
+      await downloadFile(pdfBlob, filename, 'application/pdf')
       
       // Clean up
       document.body.removeChild(iframe)
@@ -671,27 +645,61 @@ export function SessionNotes({ sessions, onEditSession, onDeleteSession }: Sessi
     return markdown
   }
 
-  const downloadFile = (content: string, filename: string, mimeType: string = 'text/plain') => {
+  const downloadFile = async (content: string | Blob, filename: string, mimeType: string = 'text/plain') => {
     try {
-      const blob = new Blob([content], { type: mimeType })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = filename
-      link.style.display = 'none'
+      const blob = content instanceof Blob ? content : new Blob([content], { type: mimeType })
       
-      // Show browser's save dialog
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
+      // Check if the File System Access API is supported (modern browsers)
+      if ('showSaveFilePicker' in window) {
+        try {
+          const fileHandle = await (window as any).showSaveFilePicker({
+            suggestedName: filename,
+            types: [
+              {
+                description: 'Download file',
+                accept: { [mimeType]: [`.${filename.split('.').pop()}`] },
+              },
+            ],
+          })
+          
+          const writable = await fileHandle.createWritable()
+          await writable.write(blob)
+          await writable.close()
+          
+          toast.success('File saved successfully!', {
+            description: 'File saved to your selected location'
+          })
+        } catch (err: any) {
+          // User cancelled or error occurred, fall back to traditional download
+          if (err.name !== 'AbortError') {
+            throw err
+          }
+          return // User cancelled
+        }
+      } else {
+        // Fallback for browsers that don't support File System Access API
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = filename
+        link.style.display = 'none'
+        
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+        
+        toast.success('File downloaded successfully!', {
+          description: 'Check your Downloads folder'
+        })
+      }
       
       // Close download dialog
       setDownloadDialogOpen(false)
       setDownloadAllDialogOpen(false)
       setDownloadSessionId(null)
     } catch (error) {
-      toast.error('Failed to download file')
+      toast.error('Failed to save file')
       console.error('Download error:', error)
     }
   }
@@ -954,7 +962,7 @@ export function SessionNotes({ sessions, onEditSession, onDeleteSession }: Sessi
 
       {/* Edit Session Dialog */}
       <Dialog open={editingSession !== null} onOpenChange={(open) => !open && handleEditCancel()}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="font-display">Edit Session Notes</DialogTitle>
             <DialogDescription className="font-ui">
@@ -963,11 +971,12 @@ export function SessionNotes({ sessions, onEditSession, onDeleteSession }: Sessi
           </DialogHeader>
           
           <div className="flex-1 overflow-hidden">
-            <Textarea
-              value={editedNotes}
-              onChange={(e) => setEditedNotes(e.target.value)}
+            <RichTextEditor
+              content={editedNotes}
+              onChange={setEditedNotes}
               placeholder="Update your notes here..."
-              className="min-h-[300px] resize-none font-ui"
+              editorHeight="400px"
+              className="h-full"
             />
           </div>
           
