@@ -31,6 +31,28 @@ import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
 import type { StudySession } from '@/App'
 
+// Type declarations for File System Access API
+declare global {
+  interface Window {
+    showSaveFilePicker?: (options?: {
+      suggestedName?: string
+      types?: Array<{
+        description: string
+        accept: Record<string, string[]>
+      }>
+    }) => Promise<FileSystemFileHandle>
+  }
+}
+
+interface FileSystemFileHandle {
+  createWritable(): Promise<FileSystemWritableFileStream>
+}
+
+interface FileSystemWritableFileStream {
+  write(data: Blob | string): Promise<void>
+  close(): Promise<void>
+}
+
 interface SessionNotesProps {
   sessions: StudySession[]
   onEditSession?: (sessionId: string, updatedNotes: string) => void
@@ -157,21 +179,45 @@ export function SessionNotes({ sessions, onEditSession, onDeleteSession }: Sessi
     setDownloadAllDialogOpen(true)
   }
 
+  const sanitizeFilename = (filename: string): string => {
+    // Remove or replace characters that are invalid in filenames
+    return filename
+      .replace(/[<>:"/\\|?*]/g, '-') // Replace invalid characters with dash
+      .replace(/\s+/g, '-') // Replace spaces with dash
+      .replace(/-+/g, '-') // Replace multiple dashes with single dash
+      .replace(/^-|-$/g, '') // Remove leading/trailing dashes
+      .substring(0, 100) // Limit length
+  }
+
   const downloadMarkdown = async (session: StudySession) => {
     try {
+      toast.loading('Preparing Markdown file...', { id: 'md-gen' })
       const markdown = generateMarkdown([session])
-      await downloadFile(markdown, `${session.topic}-${session.subtopic}-${formatDate(session.completedAt)}.md`, 'text/markdown')
+      const filename = sanitizeFilename(`${session.topic}-${session.subtopic}-${formatDateForFilename(session.completedAt)}.md`)
+      await downloadFile(markdown, filename, 'text/markdown')
+      toast.success('Markdown file saved successfully!', { id: 'md-gen' })
     } catch (error) {
-      toast.error('Failed to download Markdown file')
+      console.error('Markdown download error:', error)
+      toast.error('Failed to download Markdown file', { 
+        id: 'md-gen',
+        description: 'Please try again'
+      })
     }
   }
 
   const downloadHTML = async (session: StudySession) => {
     try {
+      toast.loading('Preparing HTML file...', { id: 'html-gen' })
       const html = generateHTML([session])
-      await downloadFile(html, `${session.topic}-${session.subtopic}-${formatDate(session.completedAt)}.html`, 'text/html')
+      const filename = sanitizeFilename(`${session.topic}-${session.subtopic}-${formatDateForFilename(session.completedAt)}.html`)
+      await downloadFile(html, filename, 'text/html')
+      toast.success('HTML file saved successfully!', { id: 'html-gen' })
     } catch (error) {
-      toast.error('Failed to download HTML file')
+      console.error('HTML download error:', error)
+      toast.error('Failed to download HTML file', { 
+        id: 'html-gen',
+        description: 'Please try again'
+      })
     }
   }
 
@@ -179,7 +225,8 @@ export function SessionNotes({ sessions, onEditSession, onDeleteSession }: Sessi
     toast.loading('Generating PDF...', { id: 'pdf-gen' })
     try {
       const html = generateHTML([session])
-      await generatePDF(html, `${session.topic}-${session.subtopic}-${formatDate(session.completedAt)}.pdf`)
+      const filename = sanitizeFilename(`${session.topic}-${session.subtopic}-${formatDateForFilename(session.completedAt)}.pdf`)
+      await generatePDF(html, filename)
       toast.success('PDF saved successfully!', { 
         id: 'pdf-gen'
       })
@@ -199,14 +246,21 @@ export function SessionNotes({ sessions, onEditSession, onDeleteSession }: Sessi
     }
     
     try {
+      toast.loading('Preparing Markdown file...', { id: 'md-all-gen' })
       const markdown = generateMarkdown(filteredSessions)
-      const filename = searchQuery || selectedTopic !== 'all' 
-        ? `study-notes-filtered-${new Date().toISOString().split('T')[0]}.md`
-        : `all-study-notes-${new Date().toISOString().split('T')[0]}.md`
+      const baseFilename = searchQuery || selectedTopic !== 'all' 
+        ? `study-notes-filtered-${new Date().toISOString().split('T')[0]}`
+        : `all-study-notes-${new Date().toISOString().split('T')[0]}`
+      const filename = sanitizeFilename(`${baseFilename}.md`)
       
       await downloadFile(markdown, filename, 'text/markdown')
+      toast.success('Markdown file saved successfully!', { id: 'md-all-gen' })
     } catch (error) {
-      toast.error('Failed to download Markdown file')
+      console.error('Markdown download error:', error)
+      toast.error('Failed to download Markdown file', { 
+        id: 'md-all-gen',
+        description: 'Please try again'
+      })
     }
   }
 
@@ -217,14 +271,21 @@ export function SessionNotes({ sessions, onEditSession, onDeleteSession }: Sessi
     }
     
     try {
+      toast.loading('Preparing HTML file...', { id: 'html-all-gen' })
       const html = generateHTML(filteredSessions)
-      const filename = searchQuery || selectedTopic !== 'all' 
-        ? `study-notes-filtered-${new Date().toISOString().split('T')[0]}.html`
-        : `all-study-notes-${new Date().toISOString().split('T')[0]}.html`
+      const baseFilename = searchQuery || selectedTopic !== 'all' 
+        ? `study-notes-filtered-${new Date().toISOString().split('T')[0]}`
+        : `all-study-notes-${new Date().toISOString().split('T')[0]}`
+      const filename = sanitizeFilename(`${baseFilename}.html`)
       
       await downloadFile(html, filename, 'text/html')
+      toast.success('HTML file saved successfully!', { id: 'html-all-gen' })
     } catch (error) {
-      toast.error('Failed to download HTML file')
+      console.error('HTML download error:', error)
+      toast.error('Failed to download HTML file', { 
+        id: 'html-all-gen',
+        description: 'Please try again'
+      })
     }
   }
 
@@ -237,9 +298,10 @@ export function SessionNotes({ sessions, onEditSession, onDeleteSession }: Sessi
     toast.loading('Generating PDF...', { id: 'pdf-all-gen' })
     try {
       const html = generateHTML(filteredSessions)
-      const filename = searchQuery || selectedTopic !== 'all' 
-        ? `study-notes-filtered-${new Date().toISOString().split('T')[0]}.pdf`
-        : `all-study-notes-${new Date().toISOString().split('T')[0]}.pdf`
+      const baseFilename = searchQuery || selectedTopic !== 'all' 
+        ? `study-notes-filtered-${new Date().toISOString().split('T')[0]}`
+        : `all-study-notes-${new Date().toISOString().split('T')[0]}`
+      const filename = sanitizeFilename(`${baseFilename}.pdf`)
       
       await generatePDF(html, filename)
       toast.success('PDF saved successfully!', { 
@@ -255,12 +317,29 @@ export function SessionNotes({ sessions, onEditSession, onDeleteSession }: Sessi
   }
 
   const copyToClipboard = async (session: StudySession) => {
-    const markdown = generateMarkdown([session])
     try {
+      const markdown = generateMarkdown([session])
       await navigator.clipboard.writeText(markdown)
       toast.success('Note copied to clipboard!')
     } catch (error) {
-      toast.error('Failed to copy to clipboard')
+      console.error('Clipboard error:', error)
+      // Fallback for browsers that don't support clipboard API
+      try {
+        const textArea = document.createElement('textarea')
+        textArea.value = generateMarkdown([session])
+        textArea.style.position = 'fixed'
+        textArea.style.left = '-999999px'
+        textArea.style.top = '-999999px'
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textArea)
+        toast.success('Note copied to clipboard!')
+      } catch (fallbackError) {
+        console.error('Fallback clipboard error:', fallbackError)
+        toast.error('Failed to copy to clipboard')
+      }
     }
   }
 
@@ -507,97 +586,105 @@ export function SessionNotes({ sessions, onEditSession, onDeleteSession }: Sessi
 
   const generatePDF = async (htmlContent: string, filename: string) => {
     try {
-      // Create a temporary iframe to render the HTML properly
-      const iframe = document.createElement('iframe')
-      iframe.style.position = 'absolute'
-      iframe.style.left = '-9999px'
-      iframe.style.width = '800px'
-      iframe.style.height = '600px'
-      iframe.style.border = 'none'
-      document.body.appendChild(iframe)
+      // Create a temporary container to render the HTML properly
+      const container = document.createElement('div')
+      container.style.position = 'absolute'
+      container.style.left = '-9999px'
+      container.style.top = '0'
+      container.style.width = '800px'
+      container.style.fontFamily = 'system-ui, -apple-system, sans-serif'
+      container.style.backgroundColor = 'white'
+      container.style.padding = '40px'
+      container.innerHTML = htmlContent
+      
+      document.body.appendChild(container)
 
-      // Wait for iframe to load
-      await new Promise((resolve) => {
-        iframe.onload = resolve
-        // Write HTML content to iframe
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document
-        if (iframeDoc) {
-          iframeDoc.open()
-          iframeDoc.write(htmlContent)
-          iframeDoc.close()
-        }
-      })
+      // Wait a bit for styles to apply and images to load
+      await new Promise(resolve => setTimeout(resolve, 1000))
 
-      // Wait a bit for styles to apply
-      await new Promise(resolve => setTimeout(resolve, 500))
-
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document
-      if (!iframeDoc) {
-        throw new Error('Failed to access iframe document')
-      }
-
-      // Convert iframe content to canvas
-      const canvas = await html2canvas(iframeDoc.body, {
-        scale: 1.5,
+      // Convert container to canvas with better options
+      const canvas = await html2canvas(container, {
+        scale: 2,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
-        width: 800,
-        height: iframeDoc.body.scrollHeight,
+        width: 880, // 800 + 40*2 padding
+        height: container.scrollHeight,
         scrollX: 0,
-        scrollY: 0
+        scrollY: 0,
+        logging: false,
+        removeContainer: false
       })
 
-      // Create PDF with better sizing
+      // Create PDF
       const pdf = new jsPDF('p', 'mm', 'a4')
       const pdfWidth = pdf.internal.pageSize.getWidth()
       const pdfHeight = pdf.internal.pageSize.getHeight()
+      const margin = 10
+      const contentWidth = pdfWidth - (margin * 2)
+      const contentHeight = pdfHeight - (margin * 2)
       
-      const imgData = canvas.toDataURL('image/png', 1.0)
+      const imgData = canvas.toDataURL('image/jpeg', 0.95)
       const imgWidth = canvas.width
       const imgHeight = canvas.height
       
       // Calculate scaling to fit page width
-      const ratio = pdfWidth / (imgWidth * 0.264583) // Convert pixels to mm
-      const scaledHeight = (imgHeight * 0.264583) * ratio
+      const pixelsToMm = 0.264583
+      const scaledWidth = contentWidth
+      const scaledHeight = (imgHeight * pixelsToMm * contentWidth) / (imgWidth * pixelsToMm)
       
-      // If content is longer than one page, split it
-      if (scaledHeight > pdfHeight - 20) {
-        const pageHeight = pdfHeight - 20
-        const totalPages = Math.ceil(scaledHeight / pageHeight)
+      // If content fits on one page
+      if (scaledHeight <= contentHeight) {
+        pdf.addImage(imgData, 'JPEG', margin, margin, scaledWidth, scaledHeight)
+      } else {
+        // Multi-page handling
+        const pageRatio = contentHeight / scaledHeight
+        const pageHeight = imgHeight * pageRatio
+        let currentY = 0
+        let pageCount = 0
         
-        for (let i = 0; i < totalPages; i++) {
-          if (i > 0) pdf.addPage()
+        while (currentY < imgHeight) {
+          if (pageCount > 0) pdf.addPage()
           
-          const sourceY = i * (imgHeight / totalPages)
-          const sourceHeight = imgHeight / totalPages
+          const remainingHeight = imgHeight - currentY
+          const sourceHeight = Math.min(pageHeight, remainingHeight)
+          const outputHeight = (sourceHeight / imgHeight) * scaledHeight
           
-          // Create a temporary canvas for this page
+          // Create a temporary canvas for this page section
           const pageCanvas = document.createElement('canvas')
           const pageCtx = pageCanvas.getContext('2d')
           pageCanvas.width = imgWidth
           pageCanvas.height = sourceHeight
           
           if (pageCtx) {
-            pageCtx.drawImage(canvas, 0, sourceY, imgWidth, sourceHeight, 0, 0, imgWidth, sourceHeight)
-            const pageImgData = pageCanvas.toDataURL('image/png', 1.0)
-            pdf.addImage(pageImgData, 'PNG', 10, 10, pdfWidth - 20, pageHeight)
+            pageCtx.drawImage(canvas, 0, currentY, imgWidth, sourceHeight, 0, 0, imgWidth, sourceHeight)
+            const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.95)
+            pdf.addImage(pageImgData, 'JPEG', margin, margin, scaledWidth, outputHeight)
+          }
+          
+          currentY += sourceHeight
+          pageCount++
+          
+          // Safety check to prevent infinite loop
+          if (pageCount > 50) {
+            console.warn('Too many pages, breaking PDF generation')
+            break
           }
         }
-      } else {
-        // Single page
-        pdf.addImage(imgData, 'PNG', 10, 10, pdfWidth - 20, scaledHeight)
       }
       
-      // Generate PDF as blob and trigger save dialog
+      // Generate PDF as blob and trigger save
       const pdfBlob = pdf.output('blob')
       await downloadFile(pdfBlob, filename, 'application/pdf')
       
       // Clean up
-      document.body.removeChild(iframe)
+      document.body.removeChild(container)
     } catch (error) {
       console.error('PDF generation error:', error)
-      throw new Error('Failed to generate PDF')
+      // Clean up container if it exists
+      const containers = document.querySelectorAll('div[style*="-9999px"]')
+      containers.forEach(el => el.remove())
+      throw new Error(`Failed to generate PDF: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -649,17 +736,43 @@ export function SessionNotes({ sessions, onEditSession, onDeleteSession }: Sessi
     try {
       const blob = content instanceof Blob ? content : new Blob([content], { type: mimeType })
       
-      // Check if the File System Access API is supported (modern browsers)
-      if ('showSaveFilePicker' in window) {
+      // Check if the File System Access API is supported and secure context
+      const hasFileSystemAccess = window.showSaveFilePicker && window.isSecureContext
+      
+      if (hasFileSystemAccess) {
         try {
-          const fileHandle = await (window as any).showSaveFilePicker({
+          // Define proper file type configuration
+          const fileExtension = filename.split('.').pop() || ''
+          const types: Array<{
+            description: string
+            accept: Record<string, string[]>
+          }> = []
+          
+          if (mimeType === 'text/markdown' || fileExtension === 'md') {
+            types.push({
+              description: 'Markdown files',
+              accept: { 'text/markdown': ['.md'] }
+            })
+          } else if (mimeType === 'text/html' || fileExtension === 'html') {
+            types.push({
+              description: 'HTML files',
+              accept: { 'text/html': ['.html'] }
+            })
+          } else if (mimeType === 'application/pdf' || fileExtension === 'pdf') {
+            types.push({
+              description: 'PDF files',
+              accept: { 'application/pdf': ['.pdf'] }
+            })
+          } else {
+            types.push({
+              description: 'Text files',
+              accept: { 'text/plain': ['.txt'] }
+            })
+          }
+          
+          const fileHandle = await window.showSaveFilePicker({
             suggestedName: filename,
-            types: [
-              {
-                description: 'Download file',
-                accept: { [mimeType]: [`.${filename.split('.').pop()}`] },
-              },
-            ],
+            types: types
           })
           
           const writable = await fileHandle.createWritable()
@@ -669,38 +782,56 @@ export function SessionNotes({ sessions, onEditSession, onDeleteSession }: Sessi
           toast.success('File saved successfully!', {
             description: 'File saved to your selected location'
           })
+          
+          // Close download dialog
+          setDownloadDialogOpen(false)
+          setDownloadAllDialogOpen(false)
+          setDownloadSessionId(null)
+          return
         } catch (err: any) {
-          // User cancelled or error occurred, fall back to traditional download
-          if (err.name !== 'AbortError') {
-            throw err
+          // User cancelled or error occurred
+          if (err.name === 'AbortError') {
+            return // User cancelled, don't show error
           }
-          return // User cancelled
+          console.warn('File System Access API failed, falling back to traditional download:', err)
+          // Continue to fallback method
         }
-      } else {
-        // Fallback for browsers that don't support File System Access API
-        const url = URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = url
-        link.download = filename
-        link.style.display = 'none'
-        
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        URL.revokeObjectURL(url)
-        
-        toast.success('File downloaded successfully!', {
-          description: 'Check your Downloads folder'
-        })
       }
+      
+      // Fallback method - traditional download
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = filename
+      link.style.display = 'none'
+      
+      document.body.appendChild(link)
+      link.click()
+      
+      // Clean up after a small delay to ensure download started
+      setTimeout(() => {
+        try {
+          document.body.removeChild(link)
+          URL.revokeObjectURL(url)
+        } catch (cleanupError) {
+          console.warn('Cleanup error:', cleanupError)
+        }
+      }, 100)
+      
+      toast.success('File downloaded successfully!', {
+        description: 'Check your Downloads folder'
+      })
       
       // Close download dialog
       setDownloadDialogOpen(false)
       setDownloadAllDialogOpen(false)
       setDownloadSessionId(null)
+      
     } catch (error) {
-      toast.error('Failed to save file')
       console.error('Download error:', error)
+      toast.error('Failed to save file', {
+        description: 'Please try again or check your browser settings'
+      })
     }
   }
 
@@ -712,6 +843,13 @@ export function SessionNotes({ sessions, onEditSession, onDeleteSession }: Sessi
       hour: '2-digit',
       minute: '2-digit'
     })
+  }
+
+  const formatDateForFilename = (date: Date | string) => {
+    return new Date(date).toISOString()
+      .replace(/:/g, '-')
+      .replace(/\./g, '-')
+      .slice(0, 19)
   }
 
   const formatDuration = (minutes: number) => {
