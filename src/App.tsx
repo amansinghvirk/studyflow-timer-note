@@ -251,6 +251,20 @@ function App() {
     })
   }
 
+  const editSession = (sessionId: string, updatedNotes: string) => {
+    setSessions(current => 
+      current.map(session => 
+        session.id === sessionId 
+          ? { ...session, notes: updatedNotes }
+          : session
+      )
+    )
+  }
+
+  const deleteSession = (sessionId: string) => {
+    setSessions(current => current.filter(s => s.id !== sessionId))
+  }
+
   const updateTopics = (topic: string, subtopic: string) => {
     setTopics(current => {
       if (!current.includes(topic)) {
@@ -337,7 +351,11 @@ function App() {
 
           <TabsContent value="notes" className="space-y-6 mt-4 md:mt-6">
             <PageTitle title="Session Notes" description="View and export your study notes" />
-            <SessionNotes sessions={sessions} />
+            <SessionNotes 
+              sessions={sessions} 
+              onEditSession={editSession}
+              onDeleteSession={deleteSession}
+            />
           </TabsContent>
 
           <TabsContent value="streaks" className="space-y-6 mt-4 md:mt-6">
@@ -361,9 +379,7 @@ function App() {
             <PageTitle title="Session History" description="Review your past study sessions" />
             <SessionHistory 
               sessions={sessions}
-              onDeleteSession={(sessionId) => {
-                setSessions(current => current.filter(s => s.id !== sessionId))
-              }}
+              onDeleteSession={deleteSession}
             />
           </TabsContent>
 

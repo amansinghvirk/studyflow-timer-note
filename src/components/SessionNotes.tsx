@@ -2,11 +2,14 @@ import { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { 
   DownloadSimple, 
   FileText, 
@@ -16,7 +19,11 @@ import {
   BookOpen,
   FileArrowDown,
   Copy,
-  CaretDown
+  CaretDown,
+  PencilSimple,
+  Trash,
+  FloppyDisk,
+  X
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import html2canvas from 'html2canvas'
@@ -25,13 +32,21 @@ import type { StudySession } from '@/App'
 
 interface SessionNotesProps {
   sessions: StudySession[]
+  onEditSession?: (sessionId: string, updatedNotes: string) => void
+  onDeleteSession?: (sessionId: string) => void
 }
 
-export function SessionNotes({ sessions }: SessionNotesProps) {
+export function SessionNotes({ sessions, onEditSession, onDeleteSession }: SessionNotesProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTopic, setSelectedTopic] = useState('all')
   const [selectedSubtopic, setSelectedSubtopic] = useState('all')
   const [sortBy, setSortBy] = useState<'date' | 'topic' | 'duration'>('date')
+  const [editingSession, setEditingSession] = useState<StudySession | null>(null)
+  const [editedNotes, setEditedNotes] = useState('')
+  const [sessionToDelete, setSessionToDelete] = useState<StudySession | null>(null)
+  const [downloadDialogOpen, setDownloadDialogOpen] = useState(false)
+  const [downloadSessionId, setDownloadSessionId] = useState<string | null>(null)
+  const [downloadAllDialogOpen, setDownloadAllDialogOpen] = useState(false)
 
   // Get unique topics and subtopics from sessions
   const { topics, subtopics } = useMemo(() => {
@@ -104,6 +119,42 @@ export function SessionNotes({ sessions }: SessionNotesProps) {
 
   // Get available subtopics for selected topic
   const availableSubtopics = selectedTopic !== 'all' ? subtopics[selectedTopic] || [] : []
+
+  const handleEditStart = (session: StudySession) => {
+    setEditingSession(session)
+    setEditedNotes(session.notes)
+  }
+
+  const handleEditSave = () => {
+    if (editingSession && onEditSession) {
+      onEditSession(editingSession.id, editedNotes)
+      setEditingSession(null)
+      setEditedNotes('')
+      toast.success('Notes updated successfully!')
+    }
+  }
+
+  const handleEditCancel = () => {
+    setEditingSession(null)
+    setEditedNotes('')
+  }
+
+  const handleDeleteConfirm = () => {
+    if (sessionToDelete && onDeleteSession) {
+      onDeleteSession(sessionToDelete.id)
+      setSessionToDelete(null)
+      toast.success('Session notes deleted successfully!')
+    }
+  }
+
+  const openDownloadDialog = (sessionId: string) => {
+    setDownloadSessionId(sessionId)
+    setDownloadDialogOpen(true)
+  }
+
+  const openDownloadAllDialog = () => {
+    setDownloadAllDialogOpen(true)
+  }
 
   const downloadMarkdown = (session: StudySession) => {
     try {
@@ -563,6 +614,11 @@ export function SessionNotes({ sessions }: SessionNotesProps) {
       document.body.removeChild(link)
       URL.revokeObjectURL(url)
       
+      // Close download dialog
+      setDownloadDialogOpen(false)
+      setDownloadAllDialogOpen(false)
+      setDownloadSessionId(null)
+      
       // Clean up
       document.body.removeChild(iframe)
     } catch (error) {
@@ -616,18 +672,28 @@ export function SessionNotes({ sessions }: SessionNotesProps) {
   }
 
   const downloadFile = (content: string, filename: string, mimeType: string = 'text/plain') => {
-    const blob = new Blob([content], { type: mimeType })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = filename
-    link.style.display = 'none'
-    
-    // Show browser's save dialog
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
+    try {
+      const blob = new Blob([content], { type: mimeType })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = filename
+      link.style.display = 'none'
+      
+      // Show browser's save dialog
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+      
+      // Close download dialog
+      setDownloadDialogOpen(false)
+      setDownloadAllDialogOpen(false)
+      setDownloadSessionId(null)
+    } catch (error) {
+      toast.error('Failed to download file')
+      console.error('Download error:', error)
+    }
   }
 
   const formatDate = (date: Date | string) => {
@@ -673,30 +739,15 @@ export function SessionNotes({ sessions }: SessionNotesProps) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="default"
-                            size="sm"
-                            className="flex items-center gap-2 font-ui"
-                          >
-                            <FileArrowDown size={16} />
-                            Export All
-                            <CaretDown size={14} />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem onClick={downloadAllMarkdown}>
-                            📄 Download as Markdown
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={downloadAllHTML}>
-                            🌐 Download as HTML
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={downloadAllPDF}>
-                            📋 Download as PDF
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="flex items-center gap-2 font-ui"
+                        onClick={openDownloadAllDialog}
+                      >
+                        <FileArrowDown size={16} />
+                        Export All
+                      </Button>
                     </TooltipTrigger>
                     <TooltipContent>Export all filtered notes in different formats</TooltipContent>
                   </Tooltip>
@@ -808,6 +859,42 @@ export function SessionNotes({ sessions }: SessionNotesProps) {
                   </div>
                   
                   <div className="flex items-center gap-2">
+                    {onEditSession && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              onClick={() => handleEditStart(session)}
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                            >
+                              <PencilSimple size={14} />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Edit notes</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                    
+                    {onDeleteSession && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              onClick={() => setSessionToDelete(session)}
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                            >
+                              <Trash size={14} />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Delete session</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                    
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -827,28 +914,14 @@ export function SessionNotes({ sessions }: SessionNotesProps) {
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                              >
-                                <DownloadSimple size={14} />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                              <DropdownMenuItem onClick={() => downloadMarkdown(session)}>
-                                📄 Markdown
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => downloadHTML(session)}>
-                                🌐 HTML
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => downloadPDF(session)}>
-                                📋 PDF
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => openDownloadDialog(session.id)}
+                          >
+                            <DownloadSimple size={14} />
+                          </Button>
                         </TooltipTrigger>
                         <TooltipContent>Download in different formats</TooltipContent>
                       </Tooltip>
@@ -878,6 +951,180 @@ export function SessionNotes({ sessions }: SessionNotesProps) {
           ))}
         </div>
       )}
+
+      {/* Edit Session Dialog */}
+      <Dialog open={editingSession !== null} onOpenChange={(open) => !open && handleEditCancel()}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="font-display">Edit Session Notes</DialogTitle>
+            <DialogDescription className="font-ui">
+              Update the notes for "{editingSession?.topic} - {editingSession?.subtopic}"
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-hidden">
+            <Textarea
+              value={editedNotes}
+              onChange={(e) => setEditedNotes(e.target.value)}
+              placeholder="Update your notes here..."
+              className="min-h-[300px] resize-none font-ui"
+            />
+          </div>
+          
+          <DialogFooter>
+            <Button onClick={handleEditCancel} variant="outline" className="font-ui">
+              <X size={16} className="mr-2" />
+              Cancel
+            </Button>
+            <Button onClick={handleEditSave} className="font-ui">
+              <FloppyDisk size={16} className="mr-2" />
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={sessionToDelete !== null} onOpenChange={(open) => !open && setSessionToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-display">Delete Session Notes</AlertDialogTitle>
+            <AlertDialogDescription className="font-ui">
+              Are you sure you want to delete the notes for "{sessionToDelete?.topic} - {sessionToDelete?.subtopic}"? 
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setSessionToDelete(null)} className="font-ui">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-ui">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Download Single Session Dialog */}
+      <Dialog open={downloadDialogOpen} onOpenChange={setDownloadDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="font-display">Download Session Notes</DialogTitle>
+            <DialogDescription className="font-ui">
+              Choose a format to download this session's notes to your device.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-3">
+            <Button
+              onClick={() => {
+                const session = sessions.find(s => s.id === downloadSessionId)
+                if (session) downloadMarkdown(session)
+              }}
+              variant="outline"
+              className="justify-start font-ui h-12"
+            >
+              <FileText size={20} className="mr-3" />
+              <div className="text-left">
+                <div className="font-medium">Markdown (.md)</div>
+                <div className="text-xs text-muted-foreground">Plain text with formatting</div>
+              </div>
+            </Button>
+            
+            <Button
+              onClick={() => {
+                const session = sessions.find(s => s.id === downloadSessionId)
+                if (session) downloadHTML(session)
+              }}
+              variant="outline"
+              className="justify-start font-ui h-12"
+            >
+              <BookOpen size={20} className="mr-3" />
+              <div className="text-left">
+                <div className="font-medium">HTML (.html)</div>
+                <div className="text-xs text-muted-foreground">Web page format</div>
+              </div>
+            </Button>
+            
+            <Button
+              onClick={() => {
+                const session = sessions.find(s => s.id === downloadSessionId)
+                if (session) downloadPDF(session)
+              }}
+              variant="outline"
+              className="justify-start font-ui h-12"
+            >
+              <FileArrowDown size={20} className="mr-3" />
+              <div className="text-left">
+                <div className="font-medium">PDF (.pdf)</div>
+                <div className="text-xs text-muted-foreground">Portable document format</div>
+              </div>
+            </Button>
+          </div>
+          
+          <DialogFooter>
+            <Button onClick={() => setDownloadDialogOpen(false)} variant="outline" className="font-ui">
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Download All Sessions Dialog */}
+      <Dialog open={downloadAllDialogOpen} onOpenChange={setDownloadAllDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="font-display">Export All Notes</DialogTitle>
+            <DialogDescription className="font-ui">
+              Export {filteredSessions.length} session notes to your device. Choose your preferred format.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-3">
+            <Button
+              onClick={downloadAllMarkdown}
+              variant="outline"
+              className="justify-start font-ui h-12"
+            >
+              <FileText size={20} className="mr-3" />
+              <div className="text-left">
+                <div className="font-medium">Markdown (.md)</div>
+                <div className="text-xs text-muted-foreground">Plain text with formatting</div>
+              </div>
+            </Button>
+            
+            <Button
+              onClick={downloadAllHTML}
+              variant="outline"
+              className="justify-start font-ui h-12"
+            >
+              <BookOpen size={20} className="mr-3" />
+              <div className="text-left">
+                <div className="font-medium">HTML (.html)</div>
+                <div className="text-xs text-muted-foreground">Web page format</div>
+              </div>
+            </Button>
+            
+            <Button
+              onClick={downloadAllPDF}
+              variant="outline"
+              className="justify-start font-ui h-12"
+            >
+              <FileArrowDown size={20} className="mr-3" />
+              <div className="text-left">
+                <div className="font-medium">PDF (.pdf)</div>
+                <div className="text-xs text-muted-foreground">Portable document format</div>
+              </div>
+            </Button>
+          </div>
+          
+          <DialogFooter>
+            <Button onClick={() => setDownloadAllDialogOpen(false)} variant="outline" className="font-ui">
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
