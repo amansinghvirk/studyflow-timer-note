@@ -30,6 +30,8 @@ interface RichTextEditorProps {
   content: string
   onChange: (content: string) => void
   placeholder?: string
+  className?: string
+  editorHeight?: string
 }
 
 const PRESET_COLORS = [
@@ -43,7 +45,7 @@ const EMOJI_STICKERS = [
   '📚', '🧠', '⚡', '🎉', '👍', '❤️', '🚀', '💪'
 ]
 
-export function RichTextEditor({ content, onChange, placeholder }: RichTextEditorProps) {
+export function RichTextEditor({ content, onChange, placeholder, className, editorHeight = "200px" }: RichTextEditorProps) {
   const [linkUrl, setLinkUrl] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [selectedColor, setSelectedColor] = useState('#000000')
@@ -72,7 +74,8 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none min-h-[200px] p-4 border rounded-md',
+        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none p-4 overflow-auto',
+        style: `min-height: ${editorHeight}; max-height: calc(100vh - 300px);`,
       },
     },
   })
@@ -117,9 +120,9 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
   }
 
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 h-full flex flex-col ${className || ''}`}>
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-2 p-2 border rounded-md bg-muted/50">
+      <div className="flex flex-wrap items-center gap-2 p-2 border rounded-md bg-muted/50 flex-shrink-0">
         {/* Text Formatting */}
         <div className="flex items-center gap-1">
           <Button
@@ -291,11 +294,11 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
       </div>
 
       {/* Editor */}
-      <div className="border rounded-md min-h-[200px] focus-within:ring-2 focus-within:ring-ring">
+      <div className="border rounded-md focus-within:ring-2 focus-within:ring-ring flex-1 overflow-hidden">
         <EditorContent 
           editor={editor} 
           placeholder={placeholder}
-          className="font-body"
+          className="font-body h-full"
         />
       </div>
     </div>

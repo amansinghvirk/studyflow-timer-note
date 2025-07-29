@@ -265,6 +265,144 @@ export function StudyTimer({
     ? subtopics[selectedTopic] || [] 
     : []
 
+  // Show split layout when timer is running/paused and it's a study session
+  const showSplitLayout = showEditor && sessionType === 'study' && (timerState === 'running' || timerState === 'paused')
+
+  if (showSplitLayout) {
+    return (
+      <div className="flex gap-6 h-[calc(100vh-200px)]">
+        {/* Left Timer Pane - Compact */}
+        <div className="w-80 flex-shrink-0">
+          <Card className="h-full">
+            <CardHeader className="pb-4">
+              <div className="text-center">
+                <CardTitle className="font-display text-lg mb-2">
+                  Study Session
+                </CardTitle>
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <Badge variant="default" className="flex items-center gap-1">
+                    <BookOpen size={12} />
+                    Study
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    Cycle {currentCycle}
+                  </Badge>
+                </div>
+                <div className="text-center mb-3">
+                  <p className="font-ui text-xs text-muted-foreground">Studying</p>
+                  <p className="font-display text-sm font-semibold text-foreground">
+                    {selectedTopic} - {selectedSubtopic}
+                  </p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Compact Timer Display */}
+              <div className="text-center">
+                <div className="relative w-32 h-32 mx-auto mb-3">
+                  <div className="absolute inset-0 rounded-full border-6 border-muted"></div>
+                  <div 
+                    className="absolute inset-0 rounded-full border-6 border-accent border-t-transparent transition-all duration-1000 ease-linear"
+                    style={{
+                      transform: `rotate(${progressPercentage * 3.6}deg)`
+                    }}
+                  ></div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="font-mono text-2xl font-bold text-foreground">{formatTime(timeLeft)}</div>
+                  </div>
+                </div>
+                <Progress value={progressPercentage} className="w-full mb-4" />
+              </div>
+
+              {/* Compact Timer Controls */}
+              <div className="space-y-2">
+                {timerState === 'running' && (
+                  <>
+                    <Button 
+                      onClick={pauseTimer} 
+                      variant="secondary" 
+                      size="sm"
+                      className="w-full flex items-center gap-2 font-ui"
+                    >
+                      <Pause size={16} />
+                      Pause
+                    </Button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button 
+                        onClick={stopTimer} 
+                        variant="destructive" 
+                        size="sm"
+                        className="flex items-center gap-1 font-ui text-xs"
+                      >
+                        <Square size={14} />
+                        Stop
+                      </Button>
+                      <Button 
+                        onClick={skipToNotes} 
+                        variant="outline" 
+                        size="sm"
+                        className="flex items-center gap-1 font-ui text-xs"
+                      >
+                        <SkipForward size={14} />
+                        Finish
+                      </Button>
+                    </div>
+                  </>
+                )}
+
+                {timerState === 'paused' && (
+                  <>
+                    <Button 
+                      onClick={resumeTimer} 
+                      size="sm"
+                      className="w-full flex items-center gap-2 font-ui"
+                    >
+                      <Play size={16} />
+                      Resume
+                    </Button>
+                    <Button 
+                      onClick={stopTimer} 
+                      variant="destructive" 
+                      size="sm"
+                      className="w-full flex items-center gap-2 font-ui"
+                    >
+                      <Square size={16} />
+                      Stop
+                    </Button>
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Notes Pane - Expanded */}
+        <div className="flex-1 min-w-0">
+          <Card className="h-full flex flex-col">
+            <CardHeader className="flex-shrink-0 pb-4">
+              <CardTitle className="font-display text-xl">Session Notes</CardTitle>
+              <p className="text-sm text-muted-foreground font-ui">
+                Take notes while you study • {selectedTopic} - {selectedSubtopic}
+              </p>
+            </CardHeader>
+            <CardContent className="flex-1 overflow-hidden">
+              <div className="h-full overflow-auto">
+                <RichTextEditor
+                  content={notes}
+                  onChange={setNotes}
+                  placeholder="Start taking notes for your study session..."
+                  className="h-full"
+                  editorHeight="100%"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
+  // Default layout for setup and completed states
   return (
     <div className="space-y-6">
       <Card>
@@ -416,60 +554,6 @@ export function StudyTimer({
               </>
             )}
 
-            {timerState === 'running' && (
-              <>
-                <Button 
-                  onClick={pauseTimer} 
-                  variant="secondary" 
-                  size="lg"
-                  className="flex items-center gap-2 font-ui"
-                >
-                  <Pause size={20} />
-                  Pause
-                </Button>
-                <Button 
-                  onClick={stopTimer} 
-                  variant="destructive" 
-                  size="lg"
-                  className="flex items-center gap-2 font-ui"
-                >
-                  <Square size={20} />
-                  Stop
-                </Button>
-                <Button 
-                  onClick={skipToNotes} 
-                  variant="outline" 
-                  size="lg"
-                  className="flex items-center gap-2 font-ui"
-                >
-                  <SkipForward size={20} />
-                  {sessionType === 'study' ? 'Finish Early' : 'Skip Break'}
-                </Button>
-              </>
-            )}
-
-            {timerState === 'paused' && (
-              <>
-                <Button 
-                  onClick={resumeTimer} 
-                  size="lg"
-                  className="flex items-center gap-2 font-ui"
-                >
-                  <Play size={20} />
-                  Resume
-                </Button>
-                <Button 
-                  onClick={stopTimer} 
-                  variant="destructive" 
-                  size="lg"
-                  className="flex items-center gap-2 font-ui"
-                >
-                  <Square size={20} />
-                  Stop
-                </Button>
-              </>
-            )}
-
             {timerState === 'completed' && (
               <>
                 {sessionType === 'study' ? (
@@ -521,8 +605,8 @@ export function StudyTimer({
         </CardContent>
       </Card>
 
-      {/* Rich Text Editor */}
-      {showEditor && sessionType === 'study' && (
+      {/* Rich Text Editor for completed state */}
+      {showEditor && sessionType === 'study' && timerState === 'completed' && (
         <Card>
           <CardHeader>
             <CardTitle className="font-display text-xl">Session Notes</CardTitle>
@@ -531,7 +615,7 @@ export function StudyTimer({
             <RichTextEditor
               content={notes}
               onChange={setNotes}
-              placeholder="Take notes during your study session..."
+              placeholder="Add any final notes for your session..."
             />
           </CardContent>
         </Card>
