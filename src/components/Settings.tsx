@@ -177,6 +177,74 @@ export function Settings({
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="break-duration" className="font-ui">Break Duration (minutes)</Label>
+                <div className="flex items-center gap-4">
+                  <Input
+                    id="break-duration"
+                    type="number"
+                    min="1"
+                    max="60"
+                    value={settings.breakDuration}
+                    onChange={(e) => updateSettings({ breakDuration: parseInt(e.target.value) || 5 })}
+                    className="w-32 font-ui"
+                  />
+                  <span className="text-sm text-muted-foreground font-ui">
+                    Current: {settings.breakDuration} minutes
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="long-break-duration" className="font-ui">Long Break Duration (minutes)</Label>
+                <div className="flex items-center gap-4">
+                  <Input
+                    id="long-break-duration"
+                    type="number"
+                    min="1"
+                    max="120"
+                    value={settings.longBreakDuration}
+                    onChange={(e) => updateSettings({ longBreakDuration: parseInt(e.target.value) || 15 })}
+                    className="w-32 font-ui"
+                  />
+                  <span className="text-sm text-muted-foreground font-ui">
+                    Current: {settings.longBreakDuration} minutes
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="sessions-until-long-break" className="font-ui">Study Sessions Until Long Break</Label>
+                <div className="flex items-center gap-4">
+                  <Input
+                    id="sessions-until-long-break"
+                    type="number"
+                    min="2"
+                    max="10"
+                    value={settings.sessionsUntilLongBreak}
+                    onChange={(e) => updateSettings({ sessionsUntilLongBreak: parseInt(e.target.value) || 4 })}
+                    className="w-32 font-ui"
+                  />
+                  <span className="text-sm text-muted-foreground font-ui">
+                    Every {settings.sessionsUntilLongBreak} sessions
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="auto-start-breaks" className="font-ui">Auto-start Breaks</Label>
+                <div className="flex items-center gap-3">
+                  <Switch
+                    id="auto-start-breaks"
+                    checked={settings.autoStartBreaks}
+                    onCheckedChange={(checked) => updateSettings({ autoStartBreaks: checked })}
+                  />
+                  <span className="text-sm text-muted-foreground font-ui">
+                    Automatically start break timers after study sessions
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="audio-notifications" className="font-ui">Audio Notifications</Label>
                 <div className="flex items-center gap-3">
                   <Switch
@@ -190,35 +258,109 @@ export function Settings({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <Button
-                  variant={settings.defaultDuration === 15 ? 'default' : 'outline'}
-                  onClick={() => updateSettings({ defaultDuration: 15 })}
-                  className="font-ui"
-                >
-                  15 min
-                </Button>
-                <Button
-                  variant={settings.defaultDuration === 25 ? 'default' : 'outline'}
-                  onClick={() => updateSettings({ defaultDuration: 25 })}
-                  className="font-ui"
-                >
-                  25 min
-                </Button>
-                <Button
-                  variant={settings.defaultDuration === 45 ? 'default' : 'outline'}
-                  onClick={() => updateSettings({ defaultDuration: 45 })}
-                  className="font-ui"
-                >
-                  45 min
-                </Button>
-                <Button
-                  variant={settings.defaultDuration === 60 ? 'default' : 'outline'}
-                  onClick={() => updateSettings({ defaultDuration: 60 })}
-                  className="font-ui"
-                >
-                  60 min
-                </Button>
+              <div className="space-y-3">
+                <Label className="font-ui">Quick Settings</Label>
+                <div className="space-y-2">
+                  <div className="text-sm text-muted-foreground font-ui">Study Duration</div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <Button
+                      variant={settings.defaultDuration === 15 ? 'default' : 'outline'}
+                      onClick={() => updateSettings({ defaultDuration: 15 })}
+                      className="font-ui"
+                    >
+                      15 min
+                    </Button>
+                    <Button
+                      variant={settings.defaultDuration === 25 ? 'default' : 'outline'}
+                      onClick={() => updateSettings({ defaultDuration: 25 })}
+                      className="font-ui"
+                    >
+                      25 min
+                    </Button>
+                    <Button
+                      variant={settings.defaultDuration === 45 ? 'default' : 'outline'}
+                      onClick={() => updateSettings({ defaultDuration: 45 })}
+                      className="font-ui"
+                    >
+                      45 min
+                    </Button>
+                    <Button
+                      variant={settings.defaultDuration === 60 ? 'default' : 'outline'}
+                      onClick={() => updateSettings({ defaultDuration: 60 })}
+                      className="font-ui"
+                    >
+                      60 min
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="text-sm text-muted-foreground font-ui">Break Duration</div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <Button
+                      variant={settings.breakDuration === 3 ? 'default' : 'outline'}
+                      onClick={() => updateSettings({ breakDuration: 3 })}
+                      className="font-ui"
+                    >
+                      3 min
+                    </Button>
+                    <Button
+                      variant={settings.breakDuration === 5 ? 'default' : 'outline'}
+                      onClick={() => updateSettings({ breakDuration: 5 })}
+                      className="font-ui"
+                    >
+                      5 min
+                    </Button>
+                    <Button
+                      variant={settings.breakDuration === 10 ? 'default' : 'outline'}
+                      onClick={() => updateSettings({ breakDuration: 10 })}
+                      className="font-ui"
+                    >
+                      10 min
+                    </Button>
+                    <Button
+                      variant={settings.breakDuration === 15 ? 'default' : 'outline'}
+                      onClick={() => updateSettings({ breakDuration: 15 })}
+                      className="font-ui"
+                    >
+                      15 min
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="text-sm text-muted-foreground font-ui">Long Break Duration</div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <Button
+                      variant={settings.longBreakDuration === 15 ? 'default' : 'outline'}
+                      onClick={() => updateSettings({ longBreakDuration: 15 })}
+                      className="font-ui"
+                    >
+                      15 min
+                    </Button>
+                    <Button
+                      variant={settings.longBreakDuration === 20 ? 'default' : 'outline'}
+                      onClick={() => updateSettings({ longBreakDuration: 20 })}
+                      className="font-ui"
+                    >
+                      20 min
+                    </Button>
+                    <Button
+                      variant={settings.longBreakDuration === 30 ? 'default' : 'outline'}
+                      onClick={() => updateSettings({ longBreakDuration: 30 })}
+                      className="font-ui"
+                    >
+                      30 min
+                    </Button>
+                    <Button
+                      variant={settings.longBreakDuration === 45 ? 'default' : 'outline'}
+                      onClick={() => updateSettings({ longBreakDuration: 45 })}
+                      className="font-ui"
+                    >
+                      45 min
+                    </Button>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>

@@ -19,6 +19,10 @@ export interface StudySession {
 
 export interface AppSettings {
   defaultDuration: number
+  breakDuration: number
+  longBreakDuration: number
+  sessionsUntilLongBreak: number
+  autoStartBreaks: boolean
   audioNotifications: boolean
   externalDatabase?: {
     type: string
@@ -31,6 +35,10 @@ function App() {
   const [sessions, setSessions] = useKV<StudySession[]>('study-sessions', [])
   const [settings, setSettings] = useKV<AppSettings>('app-settings', {
     defaultDuration: 25,
+    breakDuration: 5,
+    longBreakDuration: 15,
+    sessionsUntilLongBreak: 4,
+    autoStartBreaks: false,
     audioNotifications: true
   })
   const [topics, setTopics] = useKV<string[]>('study-topics', [])
