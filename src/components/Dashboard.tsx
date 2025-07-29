@@ -351,7 +351,6 @@ export function Dashboard({ sessions, streakData, achievements }: DashboardProps
           </p>
         </CardContent>
       </Card>
-      </div>
 
       {/* Daily Trend Chart */}
       <Card>
