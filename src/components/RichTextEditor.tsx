@@ -1,9 +1,10 @@
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { Color } from '@tiptap/extension-color'
-import TextStyle from '@tiptap/extension-text-style'
-import Link from '@tiptap/extension-link'
-import Image from '@tiptap/extension-image'
+import { TextStyle } from '@tiptap/extension-text-style'
+import { Link } from '@tiptap/extension-link'
+import { Image } from '@tiptap/extension-image'
+import { Underline } from '@tiptap/extension-underline'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Input } from '@/components/ui/input'
@@ -52,6 +53,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
       StarterKit,
       TextStyle,
       Color,
+      Underline,
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
