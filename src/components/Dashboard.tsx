@@ -145,9 +145,9 @@ export function Dashboard({ sessions }: DashboardProps) {
 
     // Daily trend data for the last 30 days
     const dailyTrendData = []
-    const now = new Date()
+    const currentDate = new Date()
     for (let i = 29; i >= 0; i--) {
-      const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000)
+      const date = new Date(currentDate.getTime() - i * 24 * 60 * 60 * 1000)
       const dateStr = date.toISOString().split('T')[0]
       const daySessions = sessions.filter(s => {
         const sessionDate = new Date(s.completedAt).toISOString().split('T')[0]
