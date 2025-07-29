@@ -4,7 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { StudyTimer } from '@/components/StudyTimer'
 import { SessionHistory } from '@/components/SessionHistory'
 import { Settings } from '@/components/Settings'
-import { Clock, BookOpen, History, Settings as SettingsIcon } from '@phosphor-icons/react'
+import { Dashboard } from '@/components/Dashboard'
+import { Clock, BookOpen, History, Settings as SettingsIcon, ChartBar } from '@phosphor-icons/react'
 import { Toaster } from '@/components/ui/sonner'
 
 export interface StudySession {
@@ -77,7 +78,7 @@ function App() {
         </header>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsList className="grid w-full grid-cols-5 mb-8">
             <TabsTrigger value="timer" className="flex items-center gap-2 font-ui">
               <Clock size={18} />
               Timer
@@ -85,6 +86,10 @@ function App() {
             <TabsTrigger value="notes" className="flex items-center gap-2 font-ui">
               <BookOpen size={18} />
               Notes
+            </TabsTrigger>
+            <TabsTrigger value="dashboard" className="flex items-center gap-2 font-ui">
+              <ChartBar size={18} />
+              Dashboard
             </TabsTrigger>
             <TabsTrigger value="history" className="flex items-center gap-2 font-ui">
               <History size={18} />
@@ -115,6 +120,10 @@ function App() {
                 Start a study session to access the rich text editor
               </p>
             </div>
+          </TabsContent>
+
+          <TabsContent value="dashboard" className="space-y-6">
+            <Dashboard sessions={sessions} />
           </TabsContent>
 
           <TabsContent value="history" className="space-y-6">
