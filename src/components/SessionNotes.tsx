@@ -106,24 +106,44 @@ export function SessionNotes({ sessions }: SessionNotesProps) {
   const availableSubtopics = selectedTopic !== 'all' ? subtopics[selectedTopic] || [] : []
 
   const downloadMarkdown = (session: StudySession) => {
-    const markdown = generateMarkdown([session])
-    downloadFile(markdown, `${session.topic}-${session.subtopic}-${formatDate(session.completedAt)}.md`, 'text/markdown')
-    toast.success('Note downloaded as Markdown!')
+    try {
+      const markdown = generateMarkdown([session])
+      downloadFile(markdown, `${session.topic}-${session.subtopic}-${formatDate(session.completedAt)}.md`, 'text/markdown')
+      toast.success('Note downloaded as Markdown!', {
+        description: 'Check your Downloads folder or browser downloads'
+      })
+    } catch (error) {
+      toast.error('Failed to download Markdown file')
+    }
   }
 
   const downloadHTML = async (session: StudySession) => {
-    const html = generateHTML([session])
-    downloadFile(html, `${session.topic}-${session.subtopic}-${formatDate(session.completedAt)}.html`, 'text/html')
-    toast.success('Note downloaded as HTML!')
+    try {
+      const html = generateHTML([session])
+      downloadFile(html, `${session.topic}-${session.subtopic}-${formatDate(session.completedAt)}.html`, 'text/html')
+      toast.success('Note downloaded as HTML!', {
+        description: 'Check your Downloads folder or browser downloads'
+      })
+    } catch (error) {
+      toast.error('Failed to download HTML file')
+    }
   }
 
   const downloadPDF = async (session: StudySession) => {
+    toast.loading('Generating PDF...', { id: 'pdf-gen' })
     try {
       const html = generateHTML([session])
       await generatePDF(html, `${session.topic}-${session.subtopic}-${formatDate(session.completedAt)}.pdf`)
-      toast.success('Note downloaded as PDF!')
+      toast.success('Note downloaded as PDF!', { 
+        id: 'pdf-gen',
+        description: 'Check your Downloads folder or browser downloads'
+      })
     } catch (error) {
-      toast.error('Failed to generate PDF')
+      console.error('PDF generation error:', error)
+      toast.error('Failed to generate PDF', { 
+        id: 'pdf-gen',
+        description: 'Please try again or use HTML/Markdown instead'
+      })
     }
   }
 
@@ -133,13 +153,19 @@ export function SessionNotes({ sessions }: SessionNotesProps) {
       return
     }
     
-    const markdown = generateMarkdown(filteredSessions)
-    const filename = searchQuery || selectedTopic !== 'all' 
-      ? `study-notes-filtered-${new Date().toISOString().split('T')[0]}.md`
-      : `all-study-notes-${new Date().toISOString().split('T')[0]}.md`
-    
-    downloadFile(markdown, filename, 'text/markdown')
-    toast.success(`Downloaded ${filteredSessions.length} notes as Markdown!`)
+    try {
+      const markdown = generateMarkdown(filteredSessions)
+      const filename = searchQuery || selectedTopic !== 'all' 
+        ? `study-notes-filtered-${new Date().toISOString().split('T')[0]}.md`
+        : `all-study-notes-${new Date().toISOString().split('T')[0]}.md`
+      
+      downloadFile(markdown, filename, 'text/markdown')
+      toast.success(`Downloaded ${filteredSessions.length} notes as Markdown!`, {
+        description: 'Check your Downloads folder or browser downloads'
+      })
+    } catch (error) {
+      toast.error('Failed to download Markdown file')
+    }
   }
 
   const downloadAllHTML = () => {
@@ -148,13 +174,19 @@ export function SessionNotes({ sessions }: SessionNotesProps) {
       return
     }
     
-    const html = generateHTML(filteredSessions)
-    const filename = searchQuery || selectedTopic !== 'all' 
-      ? `study-notes-filtered-${new Date().toISOString().split('T')[0]}.html`
-      : `all-study-notes-${new Date().toISOString().split('T')[0]}.html`
-    
-    downloadFile(html, filename, 'text/html')
-    toast.success(`Downloaded ${filteredSessions.length} notes as HTML!`)
+    try {
+      const html = generateHTML(filteredSessions)
+      const filename = searchQuery || selectedTopic !== 'all' 
+        ? `study-notes-filtered-${new Date().toISOString().split('T')[0]}.html`
+        : `all-study-notes-${new Date().toISOString().split('T')[0]}.html`
+      
+      downloadFile(html, filename, 'text/html')
+      toast.success(`Downloaded ${filteredSessions.length} notes as HTML!`, {
+        description: 'Check your Downloads folder or browser downloads'
+      })
+    } catch (error) {
+      toast.error('Failed to download HTML file')
+    }
   }
 
   const downloadAllPDF = async () => {
@@ -163,6 +195,7 @@ export function SessionNotes({ sessions }: SessionNotesProps) {
       return
     }
     
+    toast.loading('Generating PDF...', { id: 'pdf-all-gen' })
     try {
       const html = generateHTML(filteredSessions)
       const filename = searchQuery || selectedTopic !== 'all' 
@@ -170,9 +203,16 @@ export function SessionNotes({ sessions }: SessionNotesProps) {
         : `all-study-notes-${new Date().toISOString().split('T')[0]}.pdf`
       
       await generatePDF(html, filename)
-      toast.success(`Downloaded ${filteredSessions.length} notes as PDF!`)
+      toast.success(`Downloaded ${filteredSessions.length} notes as PDF!`, { 
+        id: 'pdf-all-gen',
+        description: 'Check your Downloads folder or browser downloads'
+      })
     } catch (error) {
-      toast.error('Failed to generate PDF')
+      console.error('PDF generation error:', error)
+      toast.error('Failed to generate PDF', { 
+        id: 'pdf-all-gen',
+        description: 'Please try again or use HTML/Markdown instead'
+      })
     }
   }
 
@@ -195,125 +235,190 @@ export function SessionNotes({ sessions }: SessionNotesProps) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Study Notes</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             color: #333;
             max-width: 800px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 40px 20px;
             background: #fff;
         }
         .header {
             text-align: center;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
+            border-bottom: 3px solid #e2e8f0;
+            padding-bottom: 30px;
+            margin-bottom: 40px;
         }
         .header h1 {
             color: #1e293b;
-            margin: 0;
+            margin: 0 0 10px 0;
             font-size: 2.5em;
+            font-weight: 700;
+        }
+        .header .subtitle {
+            color: #64748b;
+            font-size: 1.1em;
+            margin: 0;
         }
         .summary {
             background: #f8fafc;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-            border-left: 4px solid #3b82f6;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 40px;
+            border-left: 6px solid #3b82f6;
+        }
+        .summary h3 {
+            color: #1e293b;
+            margin: 0 0 15px 0;
+            font-size: 1.3em;
+        }
+        .summary p {
+            margin: 5px 0;
+            color: #475569;
         }
         .session {
             background: #fff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            page-break-inside: avoid;
         }
         .session-header {
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
         }
         .session-title {
             color: #1e293b;
-            margin: 0 0 5px 0;
-            font-size: 1.5em;
+            margin: 0 0 8px 0;
+            font-size: 1.6em;
+            font-weight: 600;
         }
         .session-meta {
             color: #64748b;
-            font-size: 0.9em;
+            font-size: 0.95em;
             display: flex;
-            gap: 20px;
+            gap: 25px;
             flex-wrap: wrap;
         }
         .meta-item {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
+            font-weight: 500;
         }
         .subtopic-badge {
             background: #e2e8f0;
             color: #475569;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.8em;
-            margin-left: 10px;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 15px;
         }
         .notes-content {
             color: #374151;
-            line-height: 1.7;
+            line-height: 1.8;
+            font-size: 1.05em;
         }
         .notes-content h1, .notes-content h2, .notes-content h3 {
             color: #1e293b;
-            margin-top: 20px;
-            margin-bottom: 10px;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            font-weight: 600;
         }
+        .notes-content h1 { font-size: 1.4em; }
+        .notes-content h2 { font-size: 1.3em; }
+        .notes-content h3 { font-size: 1.2em; }
         .notes-content ul, .notes-content ol {
-            padding-left: 20px;
+            padding-left: 25px;
+            margin: 15px 0;
+        }
+        .notes-content li {
+            margin: 8px 0;
+        }
+        .notes-content p {
+            margin: 12px 0;
         }
         .notes-content blockquote {
             border-left: 4px solid #e2e8f0;
-            padding-left: 15px;
-            margin: 15px 0;
+            padding-left: 20px;
+            margin: 20px 0;
             color: #64748b;
+            font-style: italic;
         }
         .notes-content pre, .notes-content code {
             background: #f1f5f9;
-            padding: 10px;
-            border-radius: 4px;
+            padding: 12px;
+            border-radius: 6px;
             font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .notes-content strong {
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .notes-content em {
+            font-style: italic;
+            color: #475569;
         }
         .no-notes {
             text-align: center;
             color: #9ca3af;
             font-style: italic;
-            padding: 20px;
+            padding: 30px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 2px dashed #d1d5db;
         }
         .page-break {
             page-break-after: always;
         }
         @media print {
-            body { margin: 0; }
-            .session { break-inside: avoid; }
+            body { 
+                margin: 0; 
+                padding: 20px;
+            }
+            .session { 
+                break-inside: avoid;
+                margin-bottom: 20px;
+            }
+            .header {
+                margin-bottom: 30px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>📚 Study Notes</h1>
-        <p>Generated on ${new Date().toLocaleDateString()}</p>
+        <p class="subtitle">Generated on ${new Date().toLocaleDateString('en-US', { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        })}</p>
     </div>
     `
     
     if (sessions.length > 1) {
       const totalMinutes = sessions.reduce((sum, s) => sum + s.duration, 0)
+      const uniqueTopics = new Set(sessions.map(s => s.topic)).size
       html += `
     <div class="summary">
         <h3>📊 Summary</h3>
         <p><strong>Total Sessions:</strong> ${sessions.length}</p>
         <p><strong>Total Study Time:</strong> ${formatDuration(totalMinutes)}</p>
-        <p><strong>Topics Covered:</strong> ${new Set(sessions.map(s => s.topic)).size}</p>
+        <p><strong>Topics Covered:</strong> ${uniqueTopics}</p>
+        <p><strong>Average Session:</strong> ${formatDuration(Math.round(totalMinutes / sessions.length))}</p>
     </div>
       `
     }
@@ -329,7 +434,7 @@ export function SessionNotes({ sessions }: SessionNotesProps) {
             <div class="session-meta">
                 <div class="meta-item">📅 ${formatDate(session.completedAt)}</div>
                 <div class="meta-item">⏱️ ${formatDuration(session.duration)}</div>
-                <div class="meta-item">🆔 ${session.id}</div>
+                <div class="meta-item">🆔 ${session.id.slice(0, 8)}</div>
             </div>
         </div>
         
@@ -337,9 +442,14 @@ export function SessionNotes({ sessions }: SessionNotesProps) {
       `
       
       if (session.notes.trim()) {
-        html += session.notes
+        // Clean and format the notes content
+        let notesContent = session.notes
+          .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove scripts
+          .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '') // Remove styles
+          .trim()
+        html += notesContent
       } else {
-        html += '<div class="no-notes">No notes were taken for this session.</div>'
+        html += '<div class="no-notes">📝 No notes were taken for this session.</div>'
       }
       
       html += '</div></div>'
@@ -358,47 +468,106 @@ export function SessionNotes({ sessions }: SessionNotesProps) {
   }
 
   const generatePDF = async (htmlContent: string, filename: string) => {
-    // Create a temporary div to render the HTML
-    const tempDiv = document.createElement('div')
-    tempDiv.innerHTML = htmlContent
-    tempDiv.style.position = 'absolute'
-    tempDiv.style.left = '-9999px'
-    tempDiv.style.width = '800px'
-    document.body.appendChild(tempDiv)
-
     try {
-      // Convert HTML to canvas
-      const canvas = await html2canvas(tempDiv, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff'
+      // Create a temporary iframe to render the HTML properly
+      const iframe = document.createElement('iframe')
+      iframe.style.position = 'absolute'
+      iframe.style.left = '-9999px'
+      iframe.style.width = '800px'
+      iframe.style.height = '600px'
+      iframe.style.border = 'none'
+      document.body.appendChild(iframe)
+
+      // Wait for iframe to load
+      await new Promise((resolve) => {
+        iframe.onload = resolve
+        // Write HTML content to iframe
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document
+        if (iframeDoc) {
+          iframeDoc.open()
+          iframeDoc.write(htmlContent)
+          iframeDoc.close()
+        }
       })
 
-      // Create PDF
+      // Wait a bit for styles to apply
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document
+      if (!iframeDoc) {
+        throw new Error('Failed to access iframe document')
+      }
+
+      // Convert iframe content to canvas
+      const canvas = await html2canvas(iframeDoc.body, {
+        scale: 1.5,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        width: 800,
+        height: iframeDoc.body.scrollHeight,
+        scrollX: 0,
+        scrollY: 0
+      })
+
+      // Create PDF with better sizing
       const pdf = new jsPDF('p', 'mm', 'a4')
-      const imgData = canvas.toDataURL('image/png')
-      
       const pdfWidth = pdf.internal.pageSize.getWidth()
       const pdfHeight = pdf.internal.pageSize.getHeight()
+      
+      const imgData = canvas.toDataURL('image/png', 1.0)
       const imgWidth = canvas.width
       const imgHeight = canvas.height
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight)
       
-      const imgScaledWidth = imgWidth * ratio
-      const imgScaledHeight = imgHeight * ratio
+      // Calculate scaling to fit page width
+      const ratio = pdfWidth / (imgWidth * 0.264583) // Convert pixels to mm
+      const scaledHeight = (imgHeight * 0.264583) * ratio
       
-      // Center the image on the page
-      const x = (pdfWidth - imgScaledWidth) / 2
-      const y = 10
-
-      pdf.addImage(imgData, 'PNG', x, y, imgScaledWidth, imgScaledHeight)
+      // If content is longer than one page, split it
+      if (scaledHeight > pdfHeight - 20) {
+        const pageHeight = pdfHeight - 20
+        const totalPages = Math.ceil(scaledHeight / pageHeight)
+        
+        for (let i = 0; i < totalPages; i++) {
+          if (i > 0) pdf.addPage()
+          
+          const sourceY = i * (imgHeight / totalPages)
+          const sourceHeight = imgHeight / totalPages
+          
+          // Create a temporary canvas for this page
+          const pageCanvas = document.createElement('canvas')
+          const pageCtx = pageCanvas.getContext('2d')
+          pageCanvas.width = imgWidth
+          pageCanvas.height = sourceHeight
+          
+          if (pageCtx) {
+            pageCtx.drawImage(canvas, 0, sourceY, imgWidth, sourceHeight, 0, 0, imgWidth, sourceHeight)
+            const pageImgData = pageCanvas.toDataURL('image/png', 1.0)
+            pdf.addImage(pageImgData, 'PNG', 10, 10, pdfWidth - 20, pageHeight)
+          }
+        }
+      } else {
+        // Single page
+        pdf.addImage(imgData, 'PNG', 10, 10, pdfWidth - 20, scaledHeight)
+      }
       
-      // Save the PDF
-      pdf.save(filename)
-    } finally {
+      // Trigger download with save dialog
+      const pdfBlob = pdf.output('blob')
+      const url = URL.createObjectURL(pdfBlob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = filename
+      link.style.display = 'none'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+      
       // Clean up
-      document.body.removeChild(tempDiv)
+      document.body.removeChild(iframe)
+    } catch (error) {
+      console.error('PDF generation error:', error)
+      throw new Error('Failed to generate PDF')
     }
   }
 
@@ -452,6 +621,9 @@ export function SessionNotes({ sessions }: SessionNotesProps) {
     const link = document.createElement('a')
     link.href = url
     link.download = filename
+    link.style.display = 'none'
+    
+    // Show browser's save dialog
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
