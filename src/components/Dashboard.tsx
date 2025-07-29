@@ -344,13 +344,13 @@ export function Dashboard({ sessions, streakData, achievements }: DashboardProps
           <BookOpen className="h-5 w-5 text-blue-500 mr-2" />
           <CardTitle className="text-sm font-ui font-medium">Topics Explored</CardTitle>
         </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-display font-bold">{stats.uniqueTopics}</div>
-            <p className="text-xs text-muted-foreground font-ui">
-              {stats.uniqueSubtopics} subtopics
-            </p>
-          </CardContent>
-        </Card>
+        <CardContent>
+          <div className="text-2xl font-display font-bold">{stats.uniqueTopics}</div>
+          <p className="text-xs text-muted-foreground font-ui">
+            {stats.uniqueSubtopics} subtopics
+          </p>
+        </CardContent>
+      </Card>
       </div>
 
       {/* Daily Trend Chart */}
