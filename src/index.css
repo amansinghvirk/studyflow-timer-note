@@ -135,4 +135,21 @@
     font-size: 3rem;
     letter-spacing: -0.025em;
   }
+
+  /* Mobile optimizations */
+  @media (max-width: 768px) {
+    .timer-display {
+      font-size: 2rem;
+    }
+    
+    /* Improve touch targets on mobile */
+    button {
+      min-height: 44px;
+    }
+    
+    /* Better spacing for mobile forms */
+    .mobile-form-spacing > * + * {
+      margin-top: 1rem;
+    }
+  }
 }

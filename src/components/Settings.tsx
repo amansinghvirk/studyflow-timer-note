@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
-import { Clock, Database, Tag, Trash, Plus, Check, X } from '@phosphor-icons/react'
+import { Clock, Database, Tag, Trash, Plus, Check, X, FloppyDisk } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import type { AppSettings } from '@/App'
 
@@ -29,6 +29,8 @@ export function Settings({
   onTopicsChange, 
   onSubtopicsChange 
 }: SettingsProps) {
+  const [localSettings, setLocalSettings] = useState<AppSettings>(settings)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [newTopic, setNewTopic] = useState('')
   const [newSubtopic, setNewSubtopic] = useState('')
   const [selectedTopicForSubtopic, setSelectedTopicForSubtopic] = useState('')
@@ -36,8 +38,38 @@ export function Settings({
   const [connectionString, setConnectionString] = useState(settings.externalDatabase?.connectionString || '')
   const [testingConnection, setTestingConnection] = useState(false)
 
-  const updateSettings = (updates: Partial<AppSettings>) => {
-    onSettingsChange({ ...settings, ...updates })
+  // Sync local settings when props change
+  useEffect(() => {
+    setLocalSettings(settings)
+    setHasUnsavedChanges(false)
+  }, [settings])
+
+  // Sync database type and connection string when settings change
+  useEffect(() => {
+    setDbType(settings.externalDatabase?.type || 'none')
+    setConnectionString(settings.externalDatabase?.connectionString || '')
+  }, [settings.externalDatabase])
+
+  // Check for unsaved changes
+  useEffect(() => {
+    const hasChanges = JSON.stringify(localSettings) !== JSON.stringify(settings)
+    setHasUnsavedChanges(hasChanges)
+  }, [localSettings, settings])
+
+  const updateLocalSettings = (updates: Partial<AppSettings>) => {
+    setLocalSettings(prev => ({ ...prev, ...updates }))
+  }
+
+  const saveAllSettings = () => {
+    onSettingsChange(localSettings)
+    setHasUnsavedChanges(false)
+    toast.success('Settings saved successfully!')
+  }
+
+  const resetSettings = () => {
+    setLocalSettings(settings)
+    setHasUnsavedChanges(false)
+    toast.info('Settings reset to last saved values')
   }
 
   const addTopic = () => {
@@ -119,33 +151,56 @@ export function Settings({
 
   const saveDatabaseSettings = () => {
     if (dbType === 'none') {
-      const { externalDatabase, ...settingsWithoutDb } = settings
-      onSettingsChange(settingsWithoutDb)
-      toast.success('External database disabled')
+      const { externalDatabase, ...settingsWithoutDb } = localSettings
+      setLocalSettings(settingsWithoutDb)
+      toast.success('External database disabled (remember to save all settings)')
     } else {
-      updateSettings({
+      updateLocalSettings({
         externalDatabase: {
           type: dbType,
           connectionString: connectionString
         }
       })
-      toast.success('Database settings saved')
+      toast.success('Database settings updated (remember to save all settings)')
     }
   }
 
   return (
     <div className="space-y-6">
+      {/* Save Controls */}
+      {hasUnsavedChanges && (
+        <Card className="border-amber-200 bg-amber-50/50">
+          <CardContent className="pt-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-amber-500 rounded-full animate-pulse" />
+                <span className="font-ui text-sm font-medium">You have unsaved changes</span>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={resetSettings} className="font-ui flex-1 sm:flex-none">
+                  Reset
+                </Button>
+                <Button size="sm" onClick={saveAllSettings} className="flex items-center gap-2 font-ui flex-1 sm:flex-none">
+                  <FloppyDisk size={16} />
+                  Save All Settings
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="general" className="flex items-center gap-2 font-ui">
+        <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 gap-2 md:gap-0 h-auto md:h-10">
+          <TabsTrigger value="general" className="flex items-center gap-2 font-ui justify-start md:justify-center">
             <Clock size={16} />
             General
           </TabsTrigger>
-          <TabsTrigger value="topics" className="flex items-center gap-2 font-ui">
+          <TabsTrigger value="topics" className="flex items-center gap-2 font-ui justify-start md:justify-center">
             <Tag size={16} />
             Topics
           </TabsTrigger>
-          <TabsTrigger value="database" className="flex items-center gap-2 font-ui">
+          <TabsTrigger value="database" className="flex items-center gap-2 font-ui justify-start md:justify-center">
             <Database size={16} />
             Database
           </TabsTrigger>
@@ -160,72 +215,72 @@ export function Settings({
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="default-duration" className="font-ui">Default Session Duration (minutes)</Label>
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                   <Input
                     id="default-duration"
                     type="number"
                     min="1"
                     max="180"
-                    value={settings.defaultDuration}
-                    onChange={(e) => updateSettings({ defaultDuration: parseInt(e.target.value) || 25 })}
-                    className="w-32 font-ui"
+                    value={localSettings.defaultDuration}
+                    onChange={(e) => updateLocalSettings({ defaultDuration: parseInt(e.target.value) || 25 })}
+                    className="w-full sm:w-32 font-ui"
                   />
                   <span className="text-sm text-muted-foreground font-ui">
-                    Current: {settings.defaultDuration} minutes
+                    Current: {localSettings.defaultDuration} minutes
                   </span>
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="break-duration" className="font-ui">Break Duration (minutes)</Label>
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                   <Input
                     id="break-duration"
                     type="number"
                     min="1"
                     max="60"
-                    value={settings.breakDuration}
-                    onChange={(e) => updateSettings({ breakDuration: parseInt(e.target.value) || 5 })}
-                    className="w-32 font-ui"
+                    value={localSettings.breakDuration}
+                    onChange={(e) => updateLocalSettings({ breakDuration: parseInt(e.target.value) || 5 })}
+                    className="w-full sm:w-32 font-ui"
                   />
                   <span className="text-sm text-muted-foreground font-ui">
-                    Current: {settings.breakDuration} minutes
+                    Current: {localSettings.breakDuration} minutes
                   </span>
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="long-break-duration" className="font-ui">Long Break Duration (minutes)</Label>
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                   <Input
                     id="long-break-duration"
                     type="number"
                     min="1"
                     max="120"
-                    value={settings.longBreakDuration}
-                    onChange={(e) => updateSettings({ longBreakDuration: parseInt(e.target.value) || 15 })}
-                    className="w-32 font-ui"
+                    value={localSettings.longBreakDuration}
+                    onChange={(e) => updateLocalSettings({ longBreakDuration: parseInt(e.target.value) || 15 })}
+                    className="w-full sm:w-32 font-ui"
                   />
                   <span className="text-sm text-muted-foreground font-ui">
-                    Current: {settings.longBreakDuration} minutes
+                    Current: {localSettings.longBreakDuration} minutes
                   </span>
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="sessions-until-long-break" className="font-ui">Study Sessions Until Long Break</Label>
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                   <Input
                     id="sessions-until-long-break"
                     type="number"
                     min="2"
                     max="10"
-                    value={settings.sessionsUntilLongBreak}
-                    onChange={(e) => updateSettings({ sessionsUntilLongBreak: parseInt(e.target.value) || 4 })}
-                    className="w-32 font-ui"
+                    value={localSettings.sessionsUntilLongBreak}
+                    onChange={(e) => updateLocalSettings({ sessionsUntilLongBreak: parseInt(e.target.value) || 4 })}
+                    className="w-full sm:w-32 font-ui"
                   />
                   <span className="text-sm text-muted-foreground font-ui">
-                    Every {settings.sessionsUntilLongBreak} sessions
+                    Every {localSettings.sessionsUntilLongBreak} sessions
                   </span>
                 </div>
               </div>
@@ -235,8 +290,8 @@ export function Settings({
                 <div className="flex items-center gap-3">
                   <Switch
                     id="auto-start-breaks"
-                    checked={settings.autoStartBreaks}
-                    onCheckedChange={(checked) => updateSettings({ autoStartBreaks: checked })}
+                    checked={localSettings.autoStartBreaks}
+                    onCheckedChange={(checked) => updateLocalSettings({ autoStartBreaks: checked })}
                   />
                   <span className="text-sm text-muted-foreground font-ui">
                     Automatically start break timers after study sessions
@@ -249,8 +304,8 @@ export function Settings({
                 <div className="flex items-center gap-3">
                   <Switch
                     id="audio-notifications"
-                    checked={settings.audioNotifications}
-                    onCheckedChange={(checked) => updateSettings({ audioNotifications: checked })}
+                    checked={localSettings.audioNotifications}
+                    onCheckedChange={(checked) => updateLocalSettings({ audioNotifications: checked })}
                   />
                   <span className="text-sm text-muted-foreground font-ui">
                     Play sound when timer completes
@@ -263,8 +318,8 @@ export function Settings({
                 <div className="flex items-center gap-3">
                   <Switch
                     id="distraction-free-mode"
-                    checked={settings.distractionFreeMode}
-                    onCheckedChange={(checked) => updateSettings({ distractionFreeMode: checked })}
+                    checked={localSettings.distractionFreeMode}
+                    onCheckedChange={(checked) => updateLocalSettings({ distractionFreeMode: checked })}
                   />
                   <div className="flex-1">
                     <span className="text-sm text-muted-foreground font-ui">
@@ -281,31 +336,31 @@ export function Settings({
                 <Label className="font-ui">Quick Settings</Label>
                 <div className="space-y-2">
                   <div className="text-sm text-muted-foreground font-ui">Study Duration</div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
                     <Button
-                      variant={settings.defaultDuration === 15 ? 'default' : 'outline'}
-                      onClick={() => updateSettings({ defaultDuration: 15 })}
+                      variant={localSettings.defaultDuration === 15 ? 'default' : 'outline'}
+                      onClick={() => updateLocalSettings({ defaultDuration: 15 })}
                       className="font-ui"
                     >
                       15 min
                     </Button>
                     <Button
-                      variant={settings.defaultDuration === 25 ? 'default' : 'outline'}
-                      onClick={() => updateSettings({ defaultDuration: 25 })}
+                      variant={localSettings.defaultDuration === 25 ? 'default' : 'outline'}
+                      onClick={() => updateLocalSettings({ defaultDuration: 25 })}
                       className="font-ui"
                     >
                       25 min
                     </Button>
                     <Button
-                      variant={settings.defaultDuration === 45 ? 'default' : 'outline'}
-                      onClick={() => updateSettings({ defaultDuration: 45 })}
+                      variant={localSettings.defaultDuration === 45 ? 'default' : 'outline'}
+                      onClick={() => updateLocalSettings({ defaultDuration: 45 })}
                       className="font-ui"
                     >
                       45 min
                     </Button>
                     <Button
-                      variant={settings.defaultDuration === 60 ? 'default' : 'outline'}
-                      onClick={() => updateSettings({ defaultDuration: 60 })}
+                      variant={localSettings.defaultDuration === 60 ? 'default' : 'outline'}
+                      onClick={() => updateLocalSettings({ defaultDuration: 60 })}
                       className="font-ui"
                     >
                       60 min
@@ -315,31 +370,31 @@ export function Settings({
                 
                 <div className="space-y-2">
                   <div className="text-sm text-muted-foreground font-ui">Break Duration</div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
                     <Button
-                      variant={settings.breakDuration === 3 ? 'default' : 'outline'}
-                      onClick={() => updateSettings({ breakDuration: 3 })}
+                      variant={localSettings.breakDuration === 3 ? 'default' : 'outline'}
+                      onClick={() => updateLocalSettings({ breakDuration: 3 })}
                       className="font-ui"
                     >
                       3 min
                     </Button>
                     <Button
-                      variant={settings.breakDuration === 5 ? 'default' : 'outline'}
-                      onClick={() => updateSettings({ breakDuration: 5 })}
+                      variant={localSettings.breakDuration === 5 ? 'default' : 'outline'}
+                      onClick={() => updateLocalSettings({ breakDuration: 5 })}
                       className="font-ui"
                     >
                       5 min
                     </Button>
                     <Button
-                      variant={settings.breakDuration === 10 ? 'default' : 'outline'}
-                      onClick={() => updateSettings({ breakDuration: 10 })}
+                      variant={localSettings.breakDuration === 10 ? 'default' : 'outline'}
+                      onClick={() => updateLocalSettings({ breakDuration: 10 })}
                       className="font-ui"
                     >
                       10 min
                     </Button>
                     <Button
-                      variant={settings.breakDuration === 15 ? 'default' : 'outline'}
-                      onClick={() => updateSettings({ breakDuration: 15 })}
+                      variant={localSettings.breakDuration === 15 ? 'default' : 'outline'}
+                      onClick={() => updateLocalSettings({ breakDuration: 15 })}
                       className="font-ui"
                     >
                       15 min
@@ -349,31 +404,31 @@ export function Settings({
 
                 <div className="space-y-2">
                   <div className="text-sm text-muted-foreground font-ui">Long Break Duration</div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
                     <Button
-                      variant={settings.longBreakDuration === 15 ? 'default' : 'outline'}
-                      onClick={() => updateSettings({ longBreakDuration: 15 })}
+                      variant={localSettings.longBreakDuration === 15 ? 'default' : 'outline'}
+                      onClick={() => updateLocalSettings({ longBreakDuration: 15 })}
                       className="font-ui"
                     >
                       15 min
                     </Button>
                     <Button
-                      variant={settings.longBreakDuration === 20 ? 'default' : 'outline'}
-                      onClick={() => updateSettings({ longBreakDuration: 20 })}
+                      variant={localSettings.longBreakDuration === 20 ? 'default' : 'outline'}
+                      onClick={() => updateLocalSettings({ longBreakDuration: 20 })}
                       className="font-ui"
                     >
                       20 min
                     </Button>
                     <Button
-                      variant={settings.longBreakDuration === 30 ? 'default' : 'outline'}
-                      onClick={() => updateSettings({ longBreakDuration: 30 })}
+                      variant={localSettings.longBreakDuration === 30 ? 'default' : 'outline'}
+                      onClick={() => updateLocalSettings({ longBreakDuration: 30 })}
                       className="font-ui"
                     >
                       30 min
                     </Button>
                     <Button
-                      variant={settings.longBreakDuration === 45 ? 'default' : 'outline'}
-                      onClick={() => updateSettings({ longBreakDuration: 45 })}
+                      variant={localSettings.longBreakDuration === 45 ? 'default' : 'outline'}
+                      onClick={() => updateLocalSettings({ longBreakDuration: 45 })}
                       className="font-ui"
                     >
                       45 min
@@ -395,16 +450,16 @@ export function Settings({
               {/* Add Topic */}
               <div className="space-y-3">
                 <Label htmlFor="new-topic" className="font-ui">Add New Topic</Label>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Input
                     id="new-topic"
                     placeholder="Enter topic name"
                     value={newTopic}
                     onChange={(e) => setNewTopic(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && addTopic()}
-                    className="font-ui"
+                    className="font-ui flex-1"
                   />
-                  <Button onClick={addTopic} className="flex items-center gap-2 font-ui">
+                  <Button onClick={addTopic} className="flex items-center gap-2 font-ui sm:w-auto">
                     <Plus size={16} />
                     Add
                   </Button>
@@ -477,9 +532,9 @@ export function Settings({
               {topics.length > 0 && (
                 <div className="space-y-3">
                   <Label className="font-ui">Add Subtopic</Label>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <Select value={selectedTopicForSubtopic} onValueChange={setSelectedTopicForSubtopic}>
-                      <SelectTrigger className="w-48">
+                      <SelectTrigger className="w-full sm:w-48">
                         <SelectValue placeholder="Select topic" />
                       </SelectTrigger>
                       <SelectContent>
@@ -493,9 +548,9 @@ export function Settings({
                       value={newSubtopic}
                       onChange={(e) => setNewSubtopic(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && addSubtopic()}
-                      className="font-ui"
+                      className="font-ui flex-1"
                     />
-                    <Button onClick={addSubtopic} className="flex items-center gap-2 font-ui">
+                    <Button onClick={addSubtopic} className="flex items-center gap-2 font-ui sm:w-auto">
                       <Plus size={16} />
                       Add
                     </Button>
@@ -546,12 +601,12 @@ export function Settings({
                     </p>
                   </div>
 
-                  <div className="flex gap-3">
+                  <div className="flex flex-col sm:flex-row gap-3">
                     <Button
                       onClick={testDatabaseConnection}
                       disabled={testingConnection || !connectionString.trim()}
                       variant="outline"
-                      className="flex items-center gap-2 font-ui"
+                      className="flex items-center gap-2 font-ui flex-1 sm:flex-none"
                     >
                       {testingConnection ? (
                         <>
@@ -568,7 +623,7 @@ export function Settings({
 
                     <Button
                       onClick={saveDatabaseSettings}
-                      className="flex items-center gap-2 font-ui"
+                      className="flex items-center gap-2 font-ui flex-1 sm:flex-none"
                     >
                       <Database size={16} />
                       Save Settings

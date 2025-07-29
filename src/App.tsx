@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Button } from '@/components/ui/button'
 import { StudyTimer } from '@/components/StudyTimer'
 import { SessionHistory } from '@/components/SessionHistory'
 import { Settings } from '@/components/Settings'
 import { Dashboard } from '@/components/Dashboard'
 import { StreakTracker } from '@/components/StreakTracker'
 import { SessionNotes } from '@/components/SessionNotes'
+import { MobileNavigation } from '@/components/MobileNavigation'
+import { PageTitle } from '@/components/PageTitle'
 import { Clock, BookOpen, History, Settings as SettingsIcon, ChartBar, Flame } from '@phosphor-icons/react'
 import { Toaster } from '@/components/ui/sonner'
 import { toast } from 'sonner'
@@ -266,18 +269,34 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto max-w-4xl p-4">
-        <header className="text-center py-8">
-          <h1 className="font-display text-4xl font-bold text-foreground mb-2">
-            StudyFlow
-          </h1>
-          <p className="text-muted-foreground font-ui">
-            Smart study sessions with rich note-taking
-          </p>
+      <div className="container mx-auto max-w-4xl p-3 md:p-4">
+        <header className="flex items-center justify-between py-3 md:py-8">
+          <div className="flex items-center gap-3 md:gap-4">
+            <MobileNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+            <div className="text-center md:text-left">
+              <h1 className="font-display text-xl md:text-4xl font-bold text-foreground mb-0 md:mb-2">
+                StudyFlow
+              </h1>
+              <p className="text-muted-foreground font-ui text-xs md:text-base hidden md:block">
+                Smart study sessions with rich note-taking
+              </p>
+            </div>
+          </div>
+          
+          {/* Settings button for mobile */}
+          <Button
+            variant={activeTab === 'settings' ? 'default' : 'outline'}
+            size="icon"
+            onClick={() => setActiveTab('settings')}
+            className="md:hidden"
+          >
+            <SettingsIcon size={20} />
+          </Button>
         </header>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6 mb-8">
+          {/* Desktop tabs - hidden on mobile */}
+          <TabsList className="hidden md:grid w-full grid-cols-6 mb-8">
             <TabsTrigger value="timer" className="flex items-center gap-2 font-ui">
               <Clock size={18} />
               Timer
@@ -304,7 +323,8 @@ function App() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="timer" className="space-y-6">
+          <TabsContent value="timer" className="space-y-6 mt-4 md:mt-6">
+            <PageTitle title="Study Timer" description="Focus sessions with break management" />
             <StudyTimer
               settings={settings}
               topics={topics}
@@ -315,11 +335,13 @@ function App() {
             />
           </TabsContent>
 
-          <TabsContent value="notes" className="space-y-6">
+          <TabsContent value="notes" className="space-y-6 mt-4 md:mt-6">
+            <PageTitle title="Session Notes" description="View and export your study notes" />
             <SessionNotes sessions={sessions} />
           </TabsContent>
 
-          <TabsContent value="streaks" className="space-y-6">
+          <TabsContent value="streaks" className="space-y-6 mt-4 md:mt-6">
+            <PageTitle title="Study Streaks" description="Track your progress and achievements" />
             <StreakTracker
               streakData={streakData}
               achievements={achievements}
@@ -330,11 +352,13 @@ function App() {
             />
           </TabsContent>
 
-          <TabsContent value="dashboard" className="space-y-6">
+          <TabsContent value="dashboard" className="space-y-6 mt-4 md:mt-6">
+            <PageTitle title="Analytics Dashboard" description="Detailed study statistics and trends" />
             <Dashboard sessions={sessions} streakData={streakData} achievements={achievements} />
           </TabsContent>
 
-          <TabsContent value="history" className="space-y-6">
+          <TabsContent value="history" className="space-y-6 mt-4 md:mt-6">
+            <PageTitle title="Session History" description="Review your past study sessions" />
             <SessionHistory 
               sessions={sessions}
               onDeleteSession={(sessionId) => {
@@ -343,7 +367,8 @@ function App() {
             />
           </TabsContent>
 
-          <TabsContent value="settings" className="space-y-6">
+          <TabsContent value="settings" className="space-y-6 mt-4 md:mt-6">
+            <PageTitle title="Settings" description="Customize your study experience" />
             <Settings
               settings={settings}
               onSettingsChange={setSettings}
