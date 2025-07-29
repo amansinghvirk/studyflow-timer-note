@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { 
   DownloadSimple, 
   FileText, 
@@ -14,9 +15,12 @@ import {
   Clock,
   BookOpen,
   FileArrowDown,
-  Copy
+  Copy,
+  CaretDown
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
+import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
 import type { StudySession } from '@/App'
 
 interface SessionNotesProps {
@@ -103,8 +107,24 @@ export function SessionNotes({ sessions }: SessionNotesProps) {
 
   const downloadMarkdown = (session: StudySession) => {
     const markdown = generateMarkdown([session])
-    downloadFile(markdown, `${session.topic}-${session.subtopic}-${formatDate(session.completedAt)}.md`)
-    toast.success('Note downloaded successfully!')
+    downloadFile(markdown, `${session.topic}-${session.subtopic}-${formatDate(session.completedAt)}.md`, 'text/markdown')
+    toast.success('Note downloaded as Markdown!')
+  }
+
+  const downloadHTML = async (session: StudySession) => {
+    const html = generateHTML([session])
+    downloadFile(html, `${session.topic}-${session.subtopic}-${formatDate(session.completedAt)}.html`, 'text/html')
+    toast.success('Note downloaded as HTML!')
+  }
+
+  const downloadPDF = async (session: StudySession) => {
+    try {
+      const html = generateHTML([session])
+      await generatePDF(html, `${session.topic}-${session.subtopic}-${formatDate(session.completedAt)}.pdf`)
+      toast.success('Note downloaded as PDF!')
+    } catch (error) {
+      toast.error('Failed to generate PDF')
+    }
   }
 
   const downloadAllMarkdown = () => {
@@ -118,8 +138,42 @@ export function SessionNotes({ sessions }: SessionNotesProps) {
       ? `study-notes-filtered-${new Date().toISOString().split('T')[0]}.md`
       : `all-study-notes-${new Date().toISOString().split('T')[0]}.md`
     
-    downloadFile(markdown, filename)
-    toast.success(`Downloaded ${filteredSessions.length} notes as markdown!`)
+    downloadFile(markdown, filename, 'text/markdown')
+    toast.success(`Downloaded ${filteredSessions.length} notes as Markdown!`)
+  }
+
+  const downloadAllHTML = () => {
+    if (filteredSessions.length === 0) {
+      toast.error('No notes to download')
+      return
+    }
+    
+    const html = generateHTML(filteredSessions)
+    const filename = searchQuery || selectedTopic !== 'all' 
+      ? `study-notes-filtered-${new Date().toISOString().split('T')[0]}.html`
+      : `all-study-notes-${new Date().toISOString().split('T')[0]}.html`
+    
+    downloadFile(html, filename, 'text/html')
+    toast.success(`Downloaded ${filteredSessions.length} notes as HTML!`)
+  }
+
+  const downloadAllPDF = async () => {
+    if (filteredSessions.length === 0) {
+      toast.error('No notes to download')
+      return
+    }
+    
+    try {
+      const html = generateHTML(filteredSessions)
+      const filename = searchQuery || selectedTopic !== 'all' 
+        ? `study-notes-filtered-${new Date().toISOString().split('T')[0]}.pdf`
+        : `all-study-notes-${new Date().toISOString().split('T')[0]}.pdf`
+      
+      await generatePDF(html, filename)
+      toast.success(`Downloaded ${filteredSessions.length} notes as PDF!`)
+    } catch (error) {
+      toast.error('Failed to generate PDF')
+    }
   }
 
   const copyToClipboard = async (session: StudySession) => {
@@ -132,7 +186,221 @@ export function SessionNotes({ sessions }: SessionNotesProps) {
     }
   }
 
-  const generateMarkdown = (sessions: StudySession[]) => {
+  const generateHTML = (sessions: StudySession[]) => {
+    let html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Notes</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #1e293b;
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .summary {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #3b82f6;
+        }
+        .session {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .session-header {
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .session-title {
+            color: #1e293b;
+            margin: 0 0 5px 0;
+            font-size: 1.5em;
+        }
+        .session-meta {
+            color: #64748b;
+            font-size: 0.9em;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .subtopic-badge {
+            background: #e2e8f0;
+            color: #475569;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+        .notes-content {
+            color: #374151;
+            line-height: 1.7;
+        }
+        .notes-content h1, .notes-content h2, .notes-content h3 {
+            color: #1e293b;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .notes-content ul, .notes-content ol {
+            padding-left: 20px;
+        }
+        .notes-content blockquote {
+            border-left: 4px solid #e2e8f0;
+            padding-left: 15px;
+            margin: 15px 0;
+            color: #64748b;
+        }
+        .notes-content pre, .notes-content code {
+            background: #f1f5f9;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        .no-notes {
+            text-align: center;
+            color: #9ca3af;
+            font-style: italic;
+            padding: 20px;
+        }
+        .page-break {
+            page-break-after: always;
+        }
+        @media print {
+            body { margin: 0; }
+            .session { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📚 Study Notes</h1>
+        <p>Generated on ${new Date().toLocaleDateString()}</p>
+    </div>
+    `
+    
+    if (sessions.length > 1) {
+      const totalMinutes = sessions.reduce((sum, s) => sum + s.duration, 0)
+      html += `
+    <div class="summary">
+        <h3>📊 Summary</h3>
+        <p><strong>Total Sessions:</strong> ${sessions.length}</p>
+        <p><strong>Total Study Time:</strong> ${formatDuration(totalMinutes)}</p>
+        <p><strong>Topics Covered:</strong> ${new Set(sessions.map(s => s.topic)).size}</p>
+    </div>
+      `
+    }
+
+    sessions.forEach((session, index) => {
+      html += `
+    <div class="session">
+        <div class="session-header">
+            <h2 class="session-title">
+                ${session.topic}
+                <span class="subtopic-badge">${session.subtopic}</span>
+            </h2>
+            <div class="session-meta">
+                <div class="meta-item">📅 ${formatDate(session.completedAt)}</div>
+                <div class="meta-item">⏱️ ${formatDuration(session.duration)}</div>
+                <div class="meta-item">🆔 ${session.id}</div>
+            </div>
+        </div>
+        
+        <div class="notes-content">
+      `
+      
+      if (session.notes.trim()) {
+        html += session.notes
+      } else {
+        html += '<div class="no-notes">No notes were taken for this session.</div>'
+      }
+      
+      html += '</div></div>'
+      
+      if (index < sessions.length - 1 && sessions.length > 1) {
+        html += '<div class="page-break"></div>'
+      }
+    })
+
+    html += `
+</body>
+</html>
+    `
+
+    return html
+  }
+
+  const generatePDF = async (htmlContent: string, filename: string) => {
+    // Create a temporary div to render the HTML
+    const tempDiv = document.createElement('div')
+    tempDiv.innerHTML = htmlContent
+    tempDiv.style.position = 'absolute'
+    tempDiv.style.left = '-9999px'
+    tempDiv.style.width = '800px'
+    document.body.appendChild(tempDiv)
+
+    try {
+      // Convert HTML to canvas
+      const canvas = await html2canvas(tempDiv, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+      })
+
+      // Create PDF
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      const imgData = canvas.toDataURL('image/png')
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = pdf.internal.pageSize.getHeight()
+      const imgWidth = canvas.width
+      const imgHeight = canvas.height
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight)
+      
+      const imgScaledWidth = imgWidth * ratio
+      const imgScaledHeight = imgHeight * ratio
+      
+      // Center the image on the page
+      const x = (pdfWidth - imgScaledWidth) / 2
+      const y = 10
+
+      pdf.addImage(imgData, 'PNG', x, y, imgScaledWidth, imgScaledHeight)
+      
+      // Save the PDF
+      pdf.save(filename)
+    } finally {
+      // Clean up
+      document.body.removeChild(tempDiv)
+    }
+  }
     let markdown = '# Study Notes\n\n'
     
     if (sessions.length > 1) {
@@ -176,8 +444,224 @@ export function SessionNotes({ sessions }: SessionNotesProps) {
     return markdown
   }
 
-  const downloadFile = (content: string, filename: string) => {
-    const blob = new Blob([content], { type: 'text/markdown' })
+  const generateHTML = (sessions: StudySession[]) => {
+    let html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Notes</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #1e293b;
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .summary {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #3b82f6;
+        }
+        .session {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .session-header {
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .session-title {
+            color: #1e293b;
+            margin: 0 0 5px 0;
+            font-size: 1.5em;
+        }
+        .session-meta {
+            color: #64748b;
+            font-size: 0.9em;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .subtopic-badge {
+            background: #e2e8f0;
+            color: #475569;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+        .notes-content {
+            color: #374151;
+            line-height: 1.7;
+        }
+        .notes-content h1, .notes-content h2, .notes-content h3 {
+            color: #1e293b;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .notes-content ul, .notes-content ol {
+            padding-left: 20px;
+        }
+        .notes-content blockquote {
+            border-left: 4px solid #e2e8f0;
+            padding-left: 15px;
+            margin: 15px 0;
+            color: #64748b;
+        }
+        .notes-content pre, .notes-content code {
+            background: #f1f5f9;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        .no-notes {
+            text-align: center;
+            color: #9ca3af;
+            font-style: italic;
+            padding: 20px;
+        }
+        .page-break {
+            page-break-after: always;
+        }
+        @media print {
+            body { margin: 0; }
+            .session { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📚 Study Notes</h1>
+        <p>Generated on ${new Date().toLocaleDateString()}</p>
+    </div>
+    `
+    
+    if (sessions.length > 1) {
+      const totalMinutes = sessions.reduce((sum, s) => sum + s.duration, 0)
+      html += `
+    <div class="summary">
+        <h3>📊 Summary</h3>
+        <p><strong>Total Sessions:</strong> ${sessions.length}</p>
+        <p><strong>Total Study Time:</strong> ${formatDuration(totalMinutes)}</p>
+        <p><strong>Topics Covered:</strong> ${new Set(sessions.map(s => s.topic)).size}</p>
+    </div>
+      `
+    }
+
+    sessions.forEach((session, index) => {
+      html += `
+    <div class="session">
+        <div class="session-header">
+            <h2 class="session-title">
+                ${session.topic}
+                <span class="subtopic-badge">${session.subtopic}</span>
+            </h2>
+            <div class="session-meta">
+                <div class="meta-item">📅 ${formatDate(session.completedAt)}</div>
+                <div class="meta-item">⏱️ ${formatDuration(session.duration)}</div>
+                <div class="meta-item">🆔 ${session.id}</div>
+            </div>
+        </div>
+        
+        <div class="notes-content">
+      `
+      
+      if (session.notes.trim()) {
+        html += session.notes
+      } else {
+        html += '<div class="no-notes">No notes were taken for this session.</div>'
+      }
+      
+      html += '</div></div>'
+      
+      if (index < sessions.length - 1 && sessions.length > 1) {
+        html += '<div class="page-break"></div>'
+      }
+    })
+
+    html += `
+</body>
+</html>
+    `
+
+    return html
+  }
+
+  const generatePDF = async (htmlContent: string, filename: string) => {
+    // Create a temporary div to render the HTML
+    const tempDiv = document.createElement('div')
+    tempDiv.innerHTML = htmlContent
+    tempDiv.style.position = 'absolute'
+    tempDiv.style.left = '-9999px'
+    tempDiv.style.width = '800px'
+    document.body.appendChild(tempDiv)
+
+    try {
+      // Convert HTML to canvas
+      const canvas = await html2canvas(tempDiv, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+      })
+
+      // Create PDF
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      const imgData = canvas.toDataURL('image/png')
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = pdf.internal.pageSize.getHeight()
+      const imgWidth = canvas.width
+      const imgHeight = canvas.height
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight)
+      
+      const imgScaledWidth = imgWidth * ratio
+      const imgScaledHeight = imgHeight * ratio
+      
+      // Center the image on the page
+      const x = (pdfWidth - imgScaledWidth) / 2
+      const y = 10
+
+      pdf.addImage(imgData, 'PNG', x, y, imgScaledWidth, imgScaledHeight)
+      
+      // Save the PDF
+      pdf.save(filename)
+    } finally {
+      // Clean up
+      document.body.removeChild(tempDiv)
+    }
+  }
+
+  const downloadFile = (content: string, filename: string, mimeType: string = 'text/plain') => {
+    const blob = new Blob([content], { type: mimeType })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
@@ -231,17 +715,32 @@ export function SessionNotes({ sessions }: SessionNotesProps) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button
-                        onClick={downloadAllMarkdown}
-                        variant="default"
-                        size="sm"
-                        className="flex items-center gap-2 font-ui"
-                      >
-                        <FileArrowDown size={16} />
-                        Download All
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="flex items-center gap-2 font-ui"
+                          >
+                            <FileArrowDown size={16} />
+                            Export All
+                            <CaretDown size={14} />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem onClick={downloadAllMarkdown}>
+                            📄 Download as Markdown
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={downloadAllHTML}>
+                            🌐 Download as HTML
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={downloadAllPDF}>
+                            📋 Download as PDF
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TooltipTrigger>
-                    <TooltipContent>Download all filtered notes as markdown</TooltipContent>
+                    <TooltipContent>Export all filtered notes in different formats</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               )}
@@ -370,16 +869,30 @@ export function SessionNotes({ sessions }: SessionNotesProps) {
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button
-                            onClick={() => downloadMarkdown(session)}
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                          >
-                            <DownloadSimple size={14} />
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                              >
+                                <DownloadSimple size={14} />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                              <DropdownMenuItem onClick={() => downloadMarkdown(session)}>
+                                📄 Markdown
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => downloadHTML(session)}>
+                                🌐 HTML
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => downloadPDF(session)}>
+                                📋 PDF
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TooltipTrigger>
-                        <TooltipContent>Download as markdown</TooltipContent>
+                        <TooltipContent>Download in different formats</TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                   </div>

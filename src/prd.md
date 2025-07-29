@@ -40,6 +40,11 @@
 - **Purpose**: Captures learning in an organized, visually appealing format that aids retention
 - **Success Criteria**: Notes are easily readable and support various learning styles
 
+### Multi-Format Export System
+- **Functionality**: Export notes in Markdown, HTML, and PDF formats for individual sessions or bulk exports
+- **Purpose**: Enables sharing, archiving, and integration with external systems and study materials
+- **Success Criteria**: Notes maintain formatting and are easily accessible across different platforms and devices
+
 ### Session History & Analytics
 - **Functionality**: Complete record of study sessions with notes, topics, and duration
 - **Purpose**: Enables reflection on study patterns and progress tracking
