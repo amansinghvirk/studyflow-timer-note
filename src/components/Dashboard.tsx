@@ -13,6 +13,23 @@ import {
   Fire,
   Trophy
 } from '@phosphor-icons/react'
+import {
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts'
 import type { StudySession } from '@/App'
 
 interface DashboardProps {
@@ -126,6 +143,43 @@ export function Dashboard({ sessions }: DashboardProps) {
       }
     }).sort((a, b) => b.totalDuration - a.totalDuration)
 
+    // Daily trend data for the last 30 days
+    const dailyTrendData = []
+    const now = new Date()
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000)
+      const dateStr = date.toISOString().split('T')[0]
+      const daySessions = sessions.filter(s => {
+        const sessionDate = new Date(s.completedAt).toISOString().split('T')[0]
+        return sessionDate === dateStr
+      })
+      
+      dailyTrendData.push({
+        date: dateStr,
+        shortDate: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        sessions: daySessions.length,
+        duration: daySessions.reduce((sum, s) => sum + s.duration, 0),
+        topics: new Set(daySessions.map(s => s.topic)).size
+      })
+    }
+
+    // Topic distribution for pie chart
+    const topicDistribution = topicStats.map((topic, index) => ({
+      name: topic.topic,
+      value: topic.totalDuration,
+      sessions: topic.sessions,
+      color: `hsl(${(index * 137.5) % 360}, 70%, 60%)`
+    }))
+
+    // Performance comparison data
+    const performanceData = topicStats.slice(0, 6).map(topic => ({
+      topic: topic.topic.length > 10 ? topic.topic.substring(0, 10) + '...' : topic.topic,
+      fullTopic: topic.topic,
+      sessions: topic.sessions,
+      avgDuration: topic.averageDuration,
+      totalHours: Math.round(topic.totalDuration / 60 * 10) / 10
+    }))
+
     // Streaks and achievements
     const streakData = calculateStudyStreak(sessions)
 
@@ -139,7 +193,10 @@ export function Dashboard({ sessions }: DashboardProps) {
       weeklyStats,
       monthlyStats,
       topicStats,
-      streakData
+      streakData,
+      dailyTrendData,
+      topicDistribution,
+      performanceData
     }
   }, [filteredSessions, topics, sessions])
 
@@ -272,12 +329,273 @@ export function Dashboard({ sessions }: DashboardProps) {
         </Card>
       </div>
 
+      {/* Daily Trend Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-display flex items-center gap-2">
+            <TrendUp size={20} />
+            Daily Study Trend (Last 30 Days)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={stats.dailyTrendData}>
+                <defs>
+                  <linearGradient id="sessionGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="oklch(0.45 0.15 150)" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="oklch(0.45 0.15 150)" stopOpacity={0.1}/>
+                  </linearGradient>
+                  <linearGradient id="durationGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="oklch(0.75 0.15 75)" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="oklch(0.75 0.15 75)" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.85 0.02 85)" />
+                <XAxis 
+                  dataKey="shortDate" 
+                  stroke="oklch(0.5 0.05 150)"
+                  fontSize={12}
+                  tick={{ fontFamily: 'var(--font-ui)' }}
+                />
+                <YAxis 
+                  yAxisId="sessions"
+                  orientation="left"
+                  stroke="oklch(0.5 0.05 150)"
+                  fontSize={12}
+                  tick={{ fontFamily: 'var(--font-ui)' }}
+                />
+                <YAxis 
+                  yAxisId="duration"
+                  orientation="right"
+                  stroke="oklch(0.5 0.05 150)"
+                  fontSize={12}
+                  tick={{ fontFamily: 'var(--font-ui)' }}
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'oklch(1 0 0)',
+                    border: '1px solid oklch(0.85 0.02 85)',
+                    borderRadius: '8px',
+                    fontFamily: 'var(--font-ui)'
+                  }}
+                  formatter={(value, name) => [
+                    name === 'sessions' ? `${value} sessions` : `${value} min`,
+                    name === 'sessions' ? 'Sessions' : 'Duration'
+                  ]}
+                  labelFormatter={(label) => `Date: ${label}`}
+                />
+                <Area
+                  yAxisId="sessions"
+                  type="monotone"
+                  dataKey="sessions"
+                  stroke="oklch(0.45 0.15 150)"
+                  fill="url(#sessionGradient)"
+                  strokeWidth={2}
+                />
+                <Area
+                  yAxisId="duration"
+                  type="monotone"
+                  dataKey="duration"
+                  stroke="oklch(0.75 0.15 75)"
+                  fill="url(#durationGradient)"
+                  strokeWidth={2}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Topic Distribution Pie Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-display flex items-center gap-2">
+              <Target size={20} />
+              Study Time Distribution
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={stats.topicDistribution}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    dataKey="value"
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    labelStyle={{ fontFamily: 'var(--font-ui)', fontSize: '12px' }}
+                  >
+                    {stats.topicDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'oklch(1 0 0)',
+                      border: '1px solid oklch(0.85 0.02 85)',
+                      borderRadius: '8px',
+                      fontFamily: 'var(--font-ui)'
+                    }}
+                    formatter={(value, name) => [`${value} min`, name]}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Topic Performance Bar Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-display flex items-center gap-2">
+              <ChartBar size={20} />
+              Topic Performance
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={stats.performanceData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.85 0.02 85)" />
+                  <XAxis 
+                    dataKey="topic" 
+                    stroke="oklch(0.5 0.05 150)"
+                    fontSize={12}
+                    tick={{ fontFamily: 'var(--font-ui)' }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis 
+                    yAxisId="hours"
+                    orientation="left"
+                    stroke="oklch(0.5 0.05 150)"
+                    fontSize={12}
+                    tick={{ fontFamily: 'var(--font-ui)' }}
+                  />
+                  <YAxis 
+                    yAxisId="sessions"
+                    orientation="right"
+                    stroke="oklch(0.5 0.05 150)"
+                    fontSize={12}
+                    tick={{ fontFamily: 'var(--font-ui)' }}
+                  />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'oklch(1 0 0)',
+                      border: '1px solid oklch(0.85 0.02 85)',
+                      borderRadius: '8px',
+                      fontFamily: 'var(--font-ui)'
+                    }}
+                    formatter={(value, name) => [
+                      name === 'totalHours' ? `${value} hours` : 
+                      name === 'sessions' ? `${value} sessions` : 
+                      `${value} min`,
+                      name === 'totalHours' ? 'Total Hours' : 
+                      name === 'sessions' ? 'Sessions' : 
+                      'Avg Duration'
+                    ]}
+                    labelFormatter={(label) => stats.performanceData.find(d => d.topic === label)?.fullTopic || label}
+                  />
+                  <Bar 
+                    yAxisId="hours"
+                    dataKey="totalHours" 
+                    fill="oklch(0.45 0.15 150)" 
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar 
+                    yAxisId="sessions"
+                    dataKey="sessions" 
+                    fill="oklch(0.75 0.15 75)" 
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Weekly Progress Line Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-display flex items-center gap-2">
+            <Calendar size={20} />
+            Weekly Progress Trend
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={stats.weeklyStats}>
+                <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.85 0.02 85)" />
+                <XAxis 
+                  dataKey="week" 
+                  stroke="oklch(0.5 0.05 150)"
+                  fontSize={12}
+                  tick={{ fontFamily: 'var(--font-ui)' }}
+                />
+                <YAxis 
+                  yAxisId="sessions"
+                  orientation="left"
+                  stroke="oklch(0.5 0.05 150)"
+                  fontSize={12}
+                  tick={{ fontFamily: 'var(--font-ui)' }}
+                />
+                <YAxis 
+                  yAxisId="duration"
+                  orientation="right"
+                  stroke="oklch(0.5 0.05 150)"
+                  fontSize={12}
+                  tick={{ fontFamily: 'var(--font-ui)' }}
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'oklch(1 0 0)',
+                    border: '1px solid oklch(0.85 0.02 85)',
+                    borderRadius: '8px',
+                    fontFamily: 'var(--font-ui)'
+                  }}
+                  formatter={(value, name) => [
+                    name === 'sessions' ? `${value} sessions` : `${value} min`,
+                    name === 'sessions' ? 'Sessions' : 'Duration'
+                  ]}
+                />
+                <Line
+                  yAxisId="sessions"
+                  type="monotone"
+                  dataKey="sessions"
+                  stroke="oklch(0.45 0.15 150)"
+                  strokeWidth={3}
+                  dot={{ fill: 'oklch(0.45 0.15 150)', strokeWidth: 2, r: 6 }}
+                  activeDot={{ r: 8, stroke: 'oklch(0.45 0.15 150)', strokeWidth: 2 }}
+                />
+                <Line
+                  yAxisId="duration"
+                  type="monotone"
+                  dataKey="duration"
+                  stroke="oklch(0.75 0.15 75)"
+                  strokeWidth={3}
+                  dot={{ fill: 'oklch(0.75 0.15 75)', strokeWidth: 2, r: 6 }}
+                  activeDot={{ r: 8, stroke: 'oklch(0.75 0.15 75)', strokeWidth: 2 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Weekly Trend */}
       <Card>
         <CardHeader>
           <CardTitle className="font-display flex items-center gap-2">
             <TrendUp size={20} />
-            Weekly Progress
+            Weekly Progress Summary
           </CardTitle>
         </CardHeader>
         <CardContent>
