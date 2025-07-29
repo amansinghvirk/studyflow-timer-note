@@ -82,6 +82,59 @@ export function Dashboard({ sessions, streakData, achievements }: DashboardProps
     const dailyAverage = totalSessions > 0 ? 
       Math.round((totalSessions / Math.max(Object.keys(sessionsByDate).length, 1)) * 10) / 10 : 0
 
+    // Calculate daily duration statistics for all sessions
+    const allSessionsByDate = sessions.reduce((acc, session) => {
+      const date = new Date(session.completedAt).toDateString()
+      if (!acc[date]) acc[date] = []
+      acc[date].push(session.duration)
+      return acc
+    }, {} as Record<string, number[]>)
+
+    const dailyDurations = Object.values(allSessionsByDate).map(durations => 
+      durations.reduce((sum, duration) => sum + duration, 0)
+    )
+
+    const avgDailyDuration = dailyDurations.length > 0 ? 
+      Math.round(dailyDurations.reduce((sum, duration) => sum + duration, 0) / dailyDurations.length) : 0
+
+    // Calculate projections for different time periods (150, 180, 210, 250, 300, 365, 400, 500 days)
+    const projectionPeriods = [150, 180, 210, 250, 300, 365, 400, 500]
+    
+    // Overall projections based on average daily duration
+    const overallProjections = projectionPeriods.map(days => ({
+      days,
+      totalHours: Math.round((avgDailyDuration * days) / 60 * 10) / 10
+    }))
+
+    // Topic-wise projections
+    const topicProjections = topics.map(topic => {
+      const topicSessions = sessions.filter(s => s.topic === topic)
+      const topicSessionsByDate = topicSessions.reduce((acc, session) => {
+        const date = new Date(session.completedAt).toDateString()
+        if (!acc[date]) acc[date] = []
+        acc[date].push(session.duration)
+        return acc
+      }, {} as Record<string, number[]>)
+
+      const topicDailyDurations = Object.values(topicSessionsByDate).map(durations => 
+        durations.reduce((sum, duration) => sum + duration, 0)
+      )
+
+      const topicAvgDailyDuration = topicDailyDurations.length > 0 ? 
+        Math.round(topicDailyDurations.reduce((sum, duration) => sum + duration, 0) / topicDailyDurations.length) : 0
+
+      const projections = projectionPeriods.map(days => ({
+        days,
+        totalHours: Math.round((topicAvgDailyDuration * days) / 60 * 10) / 10
+      }))
+
+      return {
+        topic,
+        avgDailyDuration: topicAvgDailyDuration,
+        projections
+      }
+    }).filter(t => t.avgDailyDuration > 0)
+
     // Weekly stats (last 4 weeks)
     const weeklyStats = []
     const now = new Date()
@@ -199,6 +252,9 @@ export function Dashboard({ sessions, streakData, achievements }: DashboardProps
       uniqueTopics,
       uniqueSubtopics,
       dailyAverage,
+      avgDailyDuration,
+      overallProjections,
+      topicProjections,
       weeklyStats,
       monthlyStats,
       topicStats,
@@ -269,7 +325,7 @@ export function Dashboard({ sessions, streakData, achievements }: DashboardProps
       </div>
 
       {/* Overview Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-display font-bold text-accent">{stats.totalSessions}</div>
@@ -291,7 +347,13 @@ export function Dashboard({ sessions, streakData, achievements }: DashboardProps
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-display font-bold text-accent">{stats.dailyAverage}</div>
-            <div className="text-sm text-muted-foreground font-ui">Daily Avg</div>
+            <div className="text-sm text-muted-foreground font-ui">Daily Sessions</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl font-display font-bold text-accent">{formatDuration(stats.avgDailyDuration)}</div>
+            <div className="text-sm text-muted-foreground font-ui">Daily Duration</div>
           </CardContent>
         </Card>
       </div>
@@ -351,6 +413,73 @@ export function Dashboard({ sessions, streakData, achievements }: DashboardProps
           </p>
         </CardContent>
       </Card>
+
+      {/* Study Projections - Overall */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-display flex items-center gap-2">
+            <Target size={20} />
+            Total Study Time Projections
+          </CardTitle>
+          <p className="text-sm text-muted-foreground font-ui">
+            Based on your average daily study time of {formatDuration(stats.avgDailyDuration)}
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {stats.overallProjections.map((projection, index) => (
+              <div key={index} className="text-center p-3 rounded-lg bg-muted">
+                <div className="font-ui text-sm font-medium text-muted-foreground">{projection.days} Days</div>
+                <div className="font-display text-lg font-bold">{projection.totalHours}h</div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Study Projections - By Topic */}
+      {stats.topicProjections.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-display flex items-center gap-2">
+              <ChartBar size={20} />
+              Topic-wise Study Projections
+            </CardTitle>
+            <p className="text-sm text-muted-foreground font-ui">
+              Projected study hours for each topic based on historical averages
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {stats.topicProjections.map((topicProjection, topicIndex) => (
+                <div key={topicIndex} className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="font-ui">
+                        {topicProjection.topic}
+                      </Badge>
+                      <span className="text-sm text-muted-foreground font-ui">
+                        avg {formatDuration(topicProjection.avgDailyDuration)}/day
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 ml-4">
+                    {topicProjection.projections.map((projection, projIndex) => (
+                      <div key={projIndex} className="text-center p-2 rounded bg-muted/50">
+                        <div className="font-ui text-xs font-medium text-muted-foreground">{projection.days}d</div>
+                        <div className="font-display text-sm font-bold">{projection.totalHours}h</div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {topicIndex < stats.topicProjections.length - 1 && <Separator />}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Daily Trend Chart */}
       <Card>
