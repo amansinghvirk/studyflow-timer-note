@@ -1,0 +1,92 @@
+<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fafafa"/>
+      <stop offset="100%" stop-color="#f5f5f5"/>
+    </linearGradient>
+    <linearGradient id="primary" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+    <linearGradient id="streak" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#f97316"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="800" fill="url(#bg)"/>
+  
+  <!-- Header -->
+  <rect x="50" y="40" width="1100" height="80" rx="8" fill="white" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="80" y="90" font-family="Inter, sans-serif" font-size="32" font-weight="700" fill="#111827">StudyFlow</text>
+  <text x="80" y="110" font-family="Inter, sans-serif" font-size="16" fill="#6b7280">Smart study sessions with rich note-taking</text>
+  
+  <!-- Navigation Tabs -->
+  <rect x="50" y="140" width="1100" height="60" rx="8" fill="white" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="130" y="175" font-family="Inter, sans-serif" font-size="14" fill="#6b7280" text-anchor="middle">Timer</text>
+  <text x="230" y="175" font-family="Inter, sans-serif" font-size="14" fill="#6b7280" text-anchor="middle">Notes</text>
+  <rect x="280" y="155" width="120" height="30" rx="4" fill="url(#streak)"/>
+  <text x="340" y="175" font-family="Inter, sans-serif" font-size="14" font-weight="500" fill="white" text-anchor="middle">Streaks</text>
+  <text x="430" y="175" font-family="Inter, sans-serif" font-size="14" fill="#6b7280" text-anchor="middle">Dashboard</text>
+  <text x="530" y="175" font-family="Inter, sans-serif" font-size="14" fill="#6b7280" text-anchor="middle">History</text>
+  <text x="630" y="175" font-family="Inter, sans-serif" font-size="14" fill="#6b7280" text-anchor="middle">Settings</text>
+  
+  <!-- Main Content -->
+  <rect x="50" y="220" width="1100" height="520" rx="12" fill="white" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="600" y="260" font-family="Inter, sans-serif" font-size="24" font-weight="600" fill="#111827" text-anchor="middle">Study Streaks &amp; Achievements</text>
+  
+  <!-- Streak Stats -->
+  <rect x="80" y="300" width="300" height="180" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="230" y="330" font-family="Inter, sans-serif" font-size="18" font-weight="600" fill="#92400e" text-anchor="middle">Current Streak</text>
+  <text x="230" y="380" font-family="Inter, sans-serif" font-size="72" font-weight="800" fill="#f59e0b" text-anchor="middle">15</text>
+  <text x="230" y="410" font-family="Inter, sans-serif" font-size="16" fill="#92400e" text-anchor="middle">Days</text>
+  <text x="230" y="450" font-family="Inter, sans-serif" font-size="14" fill="#a16207" text-anchor="middle">🔥 You're on fire!</text>
+  
+  <!-- Longest Streak -->
+  <rect x="400" y="300" width="300" height="180" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <text x="550" y="330" font-family="Inter, sans-serif" font-size="18" font-weight="600" fill="#1e40af" text-anchor="middle">Longest Streak</text>
+  <text x="550" y="380" font-family="Inter, sans-serif" font-size="72" font-weight="800" fill="#3b82f6" text-anchor="middle">23</text>
+  <text x="550" y="410" font-family="Inter, sans-serif" font-size="16" fill="#1e40af" text-anchor="middle">Days</text>
+  <text x="550" y="450" font-family="Inter, sans-serif" font-size="14" fill="#1d4ed8" text-anchor="middle">Personal Best 🏆</text>
+  
+  <!-- Weekly Goal -->
+  <rect x="720" y="300" width="300" height="180" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="870" y="330" font-family="Inter, sans-serif" font-size="18" font-weight="600" fill="#166534" text-anchor="middle">Weekly Goal</text>
+  <text x="870" y="360" font-family="Inter, sans-serif" font-size="24" font-weight="700" fill="#16a34a" text-anchor="middle">5 / 7 Sessions</text>
+  
+  <!-- Progress Bar -->
+  <rect x="750" y="380" width="240" height="12" rx="6" fill="#f3f4f6"/>
+  <rect x="750" y="380" width="171" height="12" rx="6" fill="#16a34a"/>
+  
+  <text x="870" y="420" font-family="Inter, sans-serif" font-size="14" fill="#166534" text-anchor="middle">71% Complete</text>
+  <text x="870" y="450" font-family="Inter, sans-serif" font-size="14" fill="#15803d" text-anchor="middle">2 more to reach goal!</text>
+  
+  <!-- Achievements Section -->
+  <text x="80" y="520" font-family="Inter, sans-serif" font-size="20" font-weight="600" fill="#111827">Recent Achievements</text>
+  
+  <!-- Achievement Cards -->
+  <rect x="80" y="540" width="250" height="120" rx="8" fill="#fef7ff" stroke="#c084fc" stroke-width="1"/>
+  <text x="95" y="570" font-family="Inter, sans-serif" font-size="32" fill="#a855f7">🎯</text>
+  <text x="135" y="575" font-family="Inter, sans-serif" font-size="16" font-weight="600" fill="#7c3aed">Getting Started</text>
+  <text x="95" y="595" font-family="Inter, sans-serif" font-size="14" fill="#8b5cf6">Complete your first study session</text>
+  <text x="95" y="620" font-family="Inter, sans-serif" font-size="12" fill="#a78bfa">Unlocked 3 days ago</text>
+  
+  <rect x="350" y="540" width="250" height="120" rx="8" fill="#fef2f2" stroke="#f87171" stroke-width="1"/>
+  <text x="365" y="570" font-family="Inter, sans-serif" font-size="32" fill="#ef4444">🔥</text>
+  <text x="405" y="575" font-family="Inter, sans-serif" font-size="16" font-weight="600" fill="#dc2626">Building Momentum</text>
+  <text x="365" y="595" font-family="Inter, sans-serif" font-size="14" fill="#ef4444">Study for 3 days in a row</text>
+  <text x="365" y="620" font-family="Inter, sans-serif" font-size="12" fill="#f87171">Unlocked today</text>
+  
+  <rect x="620" y="540" width="250" height="120" rx="8" fill="#f0fdf4" stroke="#4ade80" stroke-width="1"/>
+  <text x="635" y="570" font-family="Inter, sans-serif" font-size="32" fill="#22c55e">📚</text>
+  <text x="675" y="575" font-family="Inter, sans-serif" font-size="16" font-weight="600" fill="#16a34a">Dedicated Learner</text>
+  <text x="635" y="595" font-family="Inter, sans-serif" font-size="14" fill="#22c55e">Complete 10 study sessions</text>
+  <text x="635" y="620" font-family="Inter, sans-serif" font-size="12" fill="#4ade80">Progress: 8/10</text>
+  
+  <rect x="890" y="540" width="250" height="120" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="5,5"/>
+  <text x="905" y="570" font-family="Inter, sans-serif" font-size="32" fill="#94a3b8">⚡</text>
+  <text x="945" y="575" font-family="Inter, sans-serif" font-size="16" font-weight="600" fill="#64748b">Week Warrior</text>
+  <text x="905" y="595" font-family="Inter, sans-serif" font-size="14" fill="#64748b">Study for 7 days in a row</text>
+  <text x="905" y="620" font-family="Inter, sans-serif" font-size="12" fill="#94a3b8">Locked - Need 7 day streak</text>
+</svg>

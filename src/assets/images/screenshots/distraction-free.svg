@@ -1,0 +1,109 @@
+<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fafafa"/>
+      <stop offset="100%" stop-color="#f5f5f5"/>
+    </linearGradient>
+    <linearGradient id="primary" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+    <filter id="blur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3"/>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="800" fill="url(#bg)"/>
+  
+  <!-- Blurred background elements for distraction-free mode -->
+  <rect x="50" y="40" width="1100" height="80" rx="8" fill="white" stroke="#e5e7eb" stroke-width="1" filter="url(#blur)" opacity="0.3"/>
+  <rect x="50" y="140" width="1100" height="60" rx="8" fill="white" stroke="#e5e7eb" stroke-width="1" filter="url(#blur)" opacity="0.3"/>
+  
+  <!-- Distraction-free header -->
+  <rect x="400" y="30" width="400" height="50" rx="8" fill="white" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="600" y="60" font-family="Inter, sans-serif" font-size="20" font-weight="600" fill="#111827" text-anchor="middle">25:30 remaining</text>
+  
+  <!-- Back to controls button -->
+  <rect x="50" y="30" width="120" height="40" rx="6" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+  <text x="110" y="55" font-family="Inter, sans-serif" font-size="14" fill="#374151" text-anchor="middle">← Controls</text>
+  
+  <!-- Topic indicator -->
+  <rect x="820" y="30" width="200" height="40" rx="6" fill="#f0f9ff" stroke="#0ea5e9" stroke-width="1"/>
+  <text x="920" y="55" font-family="Inter, sans-serif" font-size="14" fill="#0369a1" text-anchor="middle">📚 Mathematics</text>
+  
+  <!-- Main editor area - full width distraction-free -->
+  <rect x="50" y="100" width="1100" height="600" rx="12" fill="white" stroke="#e5e7eb" stroke-width="1"/>
+  
+  <!-- Rich text toolbar -->
+  <rect x="70" y="120" width="1060" height="50" rx="6" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+  
+  <!-- Toolbar buttons -->
+  <rect x="90" y="130" width="30" height="30" rx="4" fill="white" stroke="#d1d5db" stroke-width="1"/>
+  <text x="105" y="150" font-family="Inter, sans-serif" font-size="14" font-weight="700" fill="#374151" text-anchor="middle">B</text>
+  
+  <rect x="130" y="130" width="30" height="30" rx="4" fill="white" stroke="#d1d5db" stroke-width="1"/>
+  <text x="145" y="150" font-family="Inter, sans-serif" font-size="14" font-style="italic" fill="#374151" text-anchor="middle">I</text>
+  
+  <rect x="170" y="130" width="30" height="30" rx="4" fill="white" stroke="#d1d5db" stroke-width="1"/>
+  <text x="185" y="150" font-family="Inter, sans-serif" font-size="14" text-decoration="underline" fill="#374151" text-anchor="middle">U</text>
+  
+  <!-- Color picker -->
+  <circle cx="230" cy="145" r="12" fill="#ef4444"/>
+  <circle cx="250" cy="145" r="12" fill="#3b82f6"/>
+  <circle cx="270" cy="145" r="12" fill="#22c55e"/>
+  <circle cx="290" cy="145" r="12" fill="#f59e0b"/>
+  
+  <!-- Insert options -->
+  <rect x="320" y="130" width="80" height="30" rx="4" fill="white" stroke="#d1d5db" stroke-width="1"/>
+  <text x="360" y="150" font-family="Inter, sans-serif" font-size="12" fill="#374151" text-anchor="middle">🖼️ Image</text>
+  
+  <rect x="410" y="130" width="80" height="30" rx="4" fill="white" stroke="#d1d5db" stroke-width="1"/>
+  <text x="450" y="150" font-family="Inter, sans-serif" font-size="12" fill="#374151" text-anchor="middle">🔗 Link</text>
+  
+  <rect x="500" y="130" width="80" height="30" rx="4" fill="white" stroke="#d1d5db" stroke-width="1"/>
+  <text x="540" y="150" font-family="Inter, sans-serif" font-size="12" fill="#374151" text-anchor="middle">😊 Emoji</text>
+  
+  <!-- Save button -->
+  <rect x="1000" y="130" width="80" height="30" rx="4" fill="url(#primary)"/>
+  <text x="1040" y="150" font-family="Inter, sans-serif" font-size="12" font-weight="500" fill="white" text-anchor="middle">Save</text>
+  
+  <!-- Main editor content area -->
+  <rect x="70" y="190" width="1060" height="450" rx="6" fill="#fefefe" stroke="#e5e7eb" stroke-width="1"/>
+  
+  <!-- Editor content -->
+  <text x="90" y="220" font-family="Inter, sans-serif" font-size="20" font-weight="600" fill="#111827">Advanced Calculus - Integration Techniques</text>
+  
+  <text x="90" y="260" font-family="Inter, sans-serif" font-size="16" fill="#374151">Today's session focuses on integration by parts and substitution methods.</text>
+  
+  <text x="90" y="300" font-family="Inter, sans-serif" font-size="16" font-weight="600" fill="#111827">Key Concepts:</text>
+  
+  <text x="90" y="330" font-family="Inter, sans-serif" font-size="16" fill="#374151">• Integration by Parts: ∫u dv = uv - ∫v du</text>
+  <text x="90" y="360" font-family="Inter, sans-serif" font-size="16" fill="#374151">  → Choose u using LIATE rule (Logarithmic, Inverse trig, Algebraic, Trig, Exponential)</text>
+  <text x="90" y="390" font-family="Inter, sans-serif" font-size="16" fill="#374151">  → Remember to simplify v and du before applying formula</text>
+  
+  <text x="90" y="430" font-family="Inter, sans-serif" font-size="16" fill="#374151">• U-Substitution: ∫f(g(x))g'(x) dx = ∫f(u) du where u = g(x)</text>
+  <text x="90" y="460" font-family="Inter, sans-serif" font-size="16" fill="#374151">  → Look for composite functions with derivative of inner function present</text>
+  <text x="90" y="490" font-family="Inter, sans-serif" font-size="16" fill="#374151">  → Don't forget to substitute back to original variable</text>
+  
+  <text x="90" y="530" font-family="Inter, sans-serif" font-size="16" font-weight="600" fill="#111827">Practice Problems:</text>
+  <text x="90" y="560" font-family="Inter, sans-serif" font-size="16" fill="#374151">1. ∫x ln(x) dx - solved using integration by parts</text>
+  <text x="90" y="590" font-family="Inter, sans-serif" font-size="16" fill="#374151">2. ∫2x(x² + 1)⁵ dx - solved using u-substitution with u = x² + 1</text>
+  
+  <!-- Highlighted text example -->
+  <rect x="90" y="605" width="400" height="20" rx="2" fill="#fef3c7"/>
+  <text x="290" y="620" font-family="Inter, sans-serif" font-size="16" fill="#92400e" text-anchor="middle">Important: Always check your answer by differentiating!</text>
+  
+  <!-- Cursor indicator -->
+  <rect x="490" y="605" width="2" height="20" fill="#374151"/>
+  
+  <!-- Word count and session info at bottom -->
+  <rect x="70" y="660" width="1060" height="30" rx="4" fill="#f9fafb"/>
+  <text x="90" y="680" font-family="Inter, sans-serif" font-size="14" fill="#6b7280">652 words • Session time: 23:30 • Auto-save enabled</text>
+  
+  <text x="1050" y="680" font-family="Inter, sans-serif" font-size="14" fill="#16a34a" text-anchor="end">✓ Saved</text>
+  
+  <!-- Minimal progress indicator -->
+  <rect x="70" y="710" width="1060" height="4" rx="2" fill="#e5e7eb"/>
+  <rect x="70" y="710" width="750" height="4" rx="2" fill="url(#primary)"/>
+</svg>

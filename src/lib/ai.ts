@@ -1,4 +1,5 @@
 // AI model configurations and utilities
+import type { StudySession } from '@/App'
 
 export interface AIModel {
   id: string
@@ -11,6 +12,19 @@ export interface AISettings {
   apiKey: string
   selectedModel: string
   customModel?: string
+  temperature: number
+  maxTokens: number
+}
+
+export interface AIResponse {
+  success: boolean
+  content?: string
+  error?: string
+}
+
+export interface StudyFlowAIConfig {
+  apiKey: string
+  model: string
   temperature: number
   maxTokens: number
 }
@@ -217,6 +231,148 @@ Keep suggestions concise and actionable.`
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to generate suggestions' 
+    }
+  }
+}
+
+// StudyFlowAI class for comprehensive AI operations
+export class StudyFlowAI {
+  private config: StudyFlowAIConfig
+
+  constructor(config: StudyFlowAIConfig) {
+    this.config = config
+  }
+
+  async enhanceNotes(session: StudySession): Promise<AIResponse> {
+    try {
+      const prompt = spark.llmPrompt`As an expert study assistant, enhance these study notes for better clarity and structure:
+
+**Topic:** ${session.topic}
+**Subtopic:** ${session.subtopic}
+**Original Notes:**
+${session.notes}
+
+Please provide enhanced notes with:
+1. Better structure and formatting
+2. Key concepts highlighted
+3. Missing important details added
+4. Clear headings and bullet points
+
+Return only the enhanced notes without additional commentary.`
+
+      const response = await spark.llm(prompt, 'gpt-4o-mini')
+      return { success: true, content: response }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to enhance notes' 
+      }
+    }
+  }
+
+  async summarizeSession(session: StudySession): Promise<AIResponse> {
+    try {
+      const prompt = spark.llmPrompt`Create a concise summary of this study session:
+
+**Topic:** ${session.topic}
+**Subtopic:** ${session.subtopic}
+**Duration:** ${session.duration} minutes
+**Notes:**
+${session.notes}
+
+Provide a structured summary with:
+1. Key learning objectives covered
+2. Main concepts and definitions
+3. Important takeaways
+4. Areas for further study`
+
+      const response = await spark.llm(prompt, 'gpt-4o-mini')
+      return { success: true, content: response }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to summarize session' 
+      }
+    }
+  }
+
+  async generateQuiz(session: StudySession): Promise<AIResponse> {
+    try {
+      const prompt = spark.llmPrompt`Generate practice questions based on these study notes:
+
+**Topic:** ${session.topic}
+**Subtopic:** ${session.subtopic}
+**Notes:**
+${session.notes}
+
+Create 5-7 questions including:
+1. Multiple choice questions (3-4)
+2. Short answer questions (2-3)
+3. One essay question
+
+Format clearly with question numbers and answer choices for multiple choice.`
+
+      const response = await spark.llm(prompt, 'gpt-4o-mini')
+      return { success: true, content: response }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to generate quiz' 
+      }
+    }
+  }
+
+  async explainConcepts(session: StudySession): Promise<AIResponse> {
+    try {
+      const prompt = spark.llmPrompt`Identify and explain complex concepts from these study notes:
+
+**Topic:** ${session.topic}
+**Subtopic:** ${session.subtopic}
+**Notes:**
+${session.notes}
+
+For each complex concept:
+1. Provide a simple definition
+2. Use analogies or real-world examples
+3. Explain why it's important
+4. Connect it to other concepts
+
+Focus on making difficult ideas easy to understand.`
+
+      const response = await spark.llm(prompt, 'gpt-4o-mini')
+      return { success: true, content: response }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to explain concepts' 
+      }
+    }
+  }
+
+  async analyzeProgress(session: StudySession): Promise<AIResponse> {
+    try {
+      const prompt = spark.llmPrompt`Analyze this study session for learning progress and gaps:
+
+**Topic:** ${session.topic}
+**Subtopic:** ${session.subtopic}
+**Duration:** ${session.duration} minutes
+**Notes:**
+${session.notes}
+
+Provide analysis including:
+1. Knowledge gaps identified
+2. Areas of strength
+3. Suggestions for improvement
+4. Next study priorities
+5. Estimated mastery level (beginner/intermediate/advanced)`
+
+      const response = await spark.llm(prompt, 'gpt-4o-mini')
+      return { success: true, content: response }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to analyze progress' 
+      }
     }
   }
 }
