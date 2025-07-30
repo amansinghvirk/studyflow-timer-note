@@ -1,71 +1,33 @@
 // AI model configurations and utilities
 export const AVAILABLE_MODELS = [
-  { 
-    value: 'gemini-1.5-pro', 
     label: 'Gemini 1.5 Pro', 
-    description: 'Most capable model, best for complex analysis',
     provider: 'google' 
-  },
-  { 
-    value: 'gemini-1.5-flash', 
+  { id: 'gemini-1.0-pro', name: 'Gemini 1.0 Pro', provider: 'google' },
     label: 'Gemini 1.5 Flash', 
-    description: 'Fast and efficient, great for quick insights',
-    provider: 'google' 
-  },
+  { id: 'gpt-4o-mini', name: 'GPT-4o Mini', provider: 'openai' },
   { 
-    value: 'gemini-1.0-pro', 
     label: 'Gemini 1.0 Pro', 
-    description: 'Reliable and stable performance',
-    provider: 'google' 
-  },
-  { 
-    value: 'gpt-4o', 
+    provid
+
     label: 'GPT-4o', 
-    description: 'OpenAI\'s latest multimodal model',
-    provider: 'openai' 
-  },
-  { 
-    value: 'gpt-4o-mini', 
-    label: 'GPT-4o Mini', 
-    description: 'Smaller, faster version of GPT-4o',
-    provider: 'openai' 
-  },
-  { 
-    value: 'claude-3-sonnet', 
-    label: 'Claude 3 Sonnet', 
-    description: 'Balanced performance and creativity',
-    provider: 'anthropic' 
-  },
-  { 
-    value: 'claude-3-haiku', 
-    label: 'Claude 3 Haiku', 
-    description: 'Fastest Claude model for quick responses',
-    provider: 'anthropic' 
-  }
-] as const
 
-export type AIModel = typeof AVAILABLE_MODELS[number]
-
-export interface AISettings {
-  enabled: boolean
+  { 
   apiKey: string
-  model: string
-  customModel?: string
+    provider: 'openai' 
   temperature: number
   maxTokens: number
 }
 
 export const DEFAULT_AI_SETTINGS: AISettings = {
-  enabled: false,
   apiKey: '',
-  model: 'gemini-1.5-flash',
+  selectedModel: 'gemini-1.5-flash',
   temperature: 0.7,
-  maxTokens: 4096
+  maxTokens: 1000
 }
 
-// Helper function to get model by value
-export function getModelByValue(modelValue: string): AIModel | undefined {
-  return AVAILABLE_MODELS.find(model => model.value === modelValue)
+// Helper function to get model by ID
+export function getModelById(modelId: string): AIModel | undefined {
+  return AVAILABLE_MODELS.find(model => model.id === modelId)
 }
 
 // Helper function to get models by provider
@@ -80,11 +42,11 @@ export function validateApiKey(apiKey: string, provider: string): boolean {
   switch (provider) {
     case 'google':
       return apiKey.startsWith('AIza') || apiKey.length > 30
-    case 'openai':
+export function ge
       return apiKey.startsWith('sk-') && apiKey.length > 40
     case 'anthropic':
       return apiKey.startsWith('sk-ant-') && apiKey.length > 40
-    default:
+  return AVA
       return apiKey.length > 10
   }
 }
@@ -94,7 +56,7 @@ export function generateInsightsPrompt(notes: string, topic: string, subtopic: s
   return `As an AI study assistant, analyze these study notes and provide helpful insights:
 
 **Topic**: ${topic}
-**Subtopic**: ${subtopic}
+      return apiKey.lengt
 
 **Notes**:
 ${notes}
@@ -110,9 +72,9 @@ Keep your response concise but actionable. Focus on enhancing learning and reten
 }
 
 // Test AI connection
-export async function testAIConnection(apiKey: string, modelValue: string): Promise<{ success: boolean; message: string }> {
+export async function testAIConnection(apiKey: string, modelId: string): Promise<{ success: boolean; message: string }> {
   try {
-    const model = getModelByValue(modelValue)
+    const model = getModelByValue(model
     if (!model) {
       return { success: false, message: 'Invalid model selected' }
     }
@@ -126,60 +88,15 @@ export async function testAIConnection(apiKey: string, modelValue: string): Prom
     
     // Here you would implement the actual API call based on the provider
     // For now, we'll simulate a successful connection
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    }
     
     return { success: true, message: 'AI connection successful!' }
   } catch (error) {
-    return { 
+  private set
       success: false, 
       message: error instanceof Error ? error.message : 'Connection failed' 
     }
-  }
-}
-
-// StudyFlowAI class for managing AI interactions
-export class StudyFlowAI {
-  private settings: AISettings
-
-  constructor(settings: AISettings) {
-    this.settings = settings
-  }
-
-  async testConnection(): Promise<{ success: boolean; message: string }> {
-    return testAIConnection(this.settings.apiKey, this.settings.model)
-  }
-
-  async customPrompt(prompt: string, session?: any): Promise<{ success: boolean; response?: string; error?: string }> {
-    try {
-      const model = getModelByValue(this.settings.model)
-      if (!model) {
-        return { success: false, error: 'Invalid model selected' }
-      }
-
-      if (!validateApiKey(this.settings.apiKey, model.provider)) {
-        return { success: false, error: 'Invalid API key' }
-      }
-
-      // Use the spark.llm API to make the AI call
-      const sparkPrompt = spark.llmPrompt`${prompt}`
-      const result = await spark.llm(sparkPrompt)
-      
-      return { success: true, response: result }
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to process prompt' 
-      }
-    }
-  }
-
-  updateSettings(newSettings: Partial<AISettings>) {
-    this.settings = { ...this.settings, ...newSettings }
-  }
-
-  getSettings(): AISettings {
-    return { ...this.settings }
-  }
+  a
 }
 
 // Generate AI insights for study notes
@@ -187,13 +104,13 @@ export async function generateAIInsights(
   notes: string, 
   topic: string, 
   subtopic: string, 
-  settings: AISettings
+        return { succe
 ): Promise<{ success: boolean; insights?: string; error?: string }> {
-  try {
-    const model = getModelByValue(settings.model)
-    if (!model) {
+      /
+    const model = getModelById(settings.selectedModel)
+      
       return { success: false, error: 'Invalid model selected' }
-    }
+     
 
     if (!validateApiKey(settings.apiKey, model.provider)) {
       return { success: false, error: 'Invalid API key' }
@@ -201,60 +118,35 @@ export async function generateAIInsights(
 
     const prompt = generateInsightsPrompt(notes, topic, subtopic)
     
-    // Use the spark.llm API to make the AI call
-    const sparkPrompt = spark.llmPrompt`${prompt}`
-    const insights = await spark.llm(sparkPrompt)
-    
-    return { success: true, insights }
-  } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to generate insights' 
-    }
-  }
-}
+    // Here you would implement the actual API call to the selected provider
+    // For now, we'll return a mock response
+    const mockInsights = `## Key Concepts
+- Main concepts identified from your notes on ${subtopic}
+- Important principles and definitions
 
-// Generate AI enhancement suggestions for notes during live session
-export async function generateLiveNotesEnhancement(
-  currentNotes: string,
-  topic: string,
-  subtopic: string,
-  settings: AISettings
+## Learning Gaps
+- Consider expanding on theoretical foundations
+    const model = getModelByV
+
+    }
+- This topic relates to other areas in ${topic}
+      return { success: false, error: 'Invalid AP
+
+    const pro
+- Use active recall techniques
+    const sparkPrompt
+- Practice with real-world applications
+
+## Practice Questions
+      success: false, 
+2. How does this concept apply in practical scenarios?
+3. What connections can you make with previous topics?`
+
+    return { success: true, insights: mockInsights }
+  } catch (error) {
+  topic: stri
+      success: false, 
 ): Promise<{ success: boolean; suggestions?: string; error?: string }> {
-  try {
-    const model = getModelByValue(settings.model)
-    if (!model) {
-      return { success: false, error: 'Invalid model selected' }
     }
-
-    if (!validateApiKey(settings.apiKey, model.provider)) {
-      return { success: false, error: 'Invalid API key' }
-    }
-
-    const prompt = `As an AI study assistant, help enhance these study notes in real-time:
-
-**Topic**: ${topic}
-**Subtopic**: ${subtopic}
-**Current Notes**: 
-${currentNotes}
-
-Provide brief, actionable suggestions to improve these notes:
-1. **Key Points to Add**: What important concepts might be missing?
-2. **Structure Improvements**: How could the organization be enhanced?
-3. **Clarifications**: What points need more explanation?
-4. **Connections**: Links to related concepts or topics
-
-Keep suggestions concise and immediately actionable. Focus on enhancing learning.`
-    
-    // Use the spark.llm API to make the AI call
-    const sparkPrompt = spark.llmPrompt`${prompt}`
-    const suggestions = await spark.llm(sparkPrompt)
-    
-    return { success: true, suggestions }
-  } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to generate suggestions' 
-    }
-  }
+   
 }
