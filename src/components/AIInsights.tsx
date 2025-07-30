@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Brain, Lightbulb, List, Question, BookOpen, TrendUp, Sparkle, Copy, Check } from '@phosphor-icons/react'
 import { StudyFlowAI, type AIResponse } from '@/lib/ai'
-import { defaultPrompts, type AIPromptTemplate } from '@/prompts'
+import { DEFAULT_PROMPTS, type AIPrompt } from '@/prompts'
 import { toast } from 'sonner'
 import type { StudySession, AppSettings } from '@/App'
 
@@ -25,23 +25,21 @@ export function AIInsights({ session, settings }: AIInsightsProps) {
 
   const isAIConfigured = settings.aiSettings?.enabled && settings.aiSettings?.apiKey.trim() !== ''
 
-  const getPromptIcon = (category: AIPromptTemplate['category']) => {
+  const getPromptIcon = (category: AIPrompt['category']) => {
     switch (category) {
       case 'enhancement': return <Sparkle size={16} />
       case 'summary': return <List size={16} />
-      case 'quiz': return <Question size={16} />
-      case 'explanation': return <BookOpen size={16} />
+      case 'generation': return <Question size={16} />
       case 'analysis': return <TrendUp size={16} />
       default: return <Brain size={16} />
     }
   }
 
-  const getPromptColor = (category: AIPromptTemplate['category']) => {
+  const getPromptColor = (category: AIPrompt['category']) => {
     switch (category) {
       case 'enhancement': return 'bg-purple-100 text-purple-700 border-purple-200'
       case 'summary': return 'bg-blue-100 text-blue-700 border-blue-200'
-      case 'quiz': return 'bg-green-100 text-green-700 border-green-200'
-      case 'explanation': return 'bg-orange-100 text-orange-700 border-orange-200'
+      case 'generation': return 'bg-green-100 text-green-700 border-green-200'
       case 'analysis': return 'bg-indigo-100 text-indigo-700 border-indigo-200'
       default: return 'bg-gray-100 text-gray-700 border-gray-200'
     }
@@ -78,13 +76,13 @@ export function AIInsights({ session, settings }: AIInsightsProps) {
         case 'summarize-session':
           result = await ai.summarizeSession(session)
           break
-        case 'generate-quiz':
+        case 'generate-questions':
           result = await ai.generateQuiz(session)
           break
         case 'explain-concepts':
           result = await ai.explainConcepts(session)
           break
-        case 'analyze-progress':
+        case 'create-study-plan':
           result = await ai.analyzeProgress(session)
           break
         default:
@@ -123,7 +121,7 @@ export function AIInsights({ session, settings }: AIInsightsProps) {
     }
   }
 
-  const selectedPromptTemplate = defaultPrompts.find(p => p.id === selectedPrompt)
+  const selectedPromptTemplate = DEFAULT_PROMPTS.find(p => p.id === selectedPrompt)
 
   if (!isAIConfigured) {
     return (
@@ -173,7 +171,7 @@ export function AIInsights({ session, settings }: AIInsightsProps) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {defaultPrompts.map(prompt => (
+                {DEFAULT_PROMPTS.map(prompt => (
                   <SelectItem key={prompt.id} value={prompt.id}>
                     <div className="flex items-center gap-2">
                       {getPromptIcon(prompt.category)}
