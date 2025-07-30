@@ -223,15 +223,7 @@ export async function generateLiveSuggestions(
       return { success: false, error: 'AI features not enabled or API key missing' }
     }
 
-    const model = getModelByValue(aiSettings.model || 'gemini-1.5-flash')
-    if (!model) {
-      return { success: false, error: 'Invalid model selected' }
-    }
-
-    if (!validateApiKey(aiSettings.apiKey, model.provider)) {
-      return { success: false, error: 'Invalid API key for selected provider' }
-    }
-
+    // Always use the Spark API for live suggestions to ensure reliability
     const sparkPrompt = spark.llmPrompt`Based on these study notes about ${topic} - ${subtopic}, provide 2-3 brief suggestions to improve or expand the content:
 
 ${currentNotes}

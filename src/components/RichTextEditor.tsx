@@ -170,11 +170,55 @@ export function RichTextEditor({
   const insertAISuggestion = useCallback((suggestion: string) => {
     if (!editor) return
     
-    // Insert the suggestion at the current cursor position
-    editor.chain().focus().insertContent(`\n\n**AI Suggestion:**\n${suggestion}\n`).run()
+    // Insert the suggestion at the current cursor position with better formatting
+    const currentPos = editor.state.selection.from
+    const formattedSuggestion = `\n\n**💡 AI Suggestion:**\n${suggestion}\n\n`
+    
+    editor.chain()
+      .focus()
+      .setTextSelection(currentPos)
+      .insertContent(formattedSuggestion)
+      .run()
+      
     setShowAISuggestions(false)
     toast.success('AI suggestion added to notes')
   }, [editor])
+
+  const generateQuickInsight = useCallback(async () => {
+    if (!settings?.aiSettings?.enabled || !settings?.aiSettings?.apiKey || !topic || !subtopic) {
+      toast.error('AI features not configured')
+      return
+    }
+
+    if (!content.trim()) {
+      toast.error('Please write some notes first')
+      return
+    }
+
+    setIsGeneratingAI(true)
+    
+    try {
+      const sparkPrompt = spark.llmPrompt`Provide a quick learning insight about these study notes on ${topic} - ${subtopic}:
+
+${content}
+
+Give one actionable tip to improve understanding or retention of this material. Keep it concise and specific.`
+
+      const insight = await spark.llm(sparkPrompt, 'gpt-4o-mini')
+      
+      if (insight) {
+        // Insert insight directly into the editor
+        const formattedInsight = `\n\n**🧠 Quick Insight:**\n${insight}\n\n`
+        editor?.chain().focus().insertContent(formattedInsight).run()
+        toast.success('Learning insight added!')
+      }
+    } catch (error) {
+      toast.error('Failed to generate insight')
+      console.error('Quick insight error:', error)
+    } finally {
+      setIsGeneratingAI(false)
+    }
+  }, [content, topic, subtopic, settings?.aiSettings, editor])
 
   const applyColor = useCallback((color: string) => {
     if (!editor) return
@@ -393,18 +437,40 @@ export function RichTextEditor({
               </Tooltip>
             </TooltipProvider>
 
+            {/* Quick Insight */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={generateQuickInsight}
+                    disabled={isGeneratingAI}
+                    className="flex items-center gap-1"
+                  >
+                    {isGeneratingAI ? (
+                      <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Sparkle size={16} className="text-blue-600" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Generate quick learning insight</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
             {/* AI Suggestions Panel */}
             {showAISuggestions && (
               <Popover open={showAISuggestions} onOpenChange={setShowAISuggestions}>
                 <PopoverTrigger asChild>
                   <Button variant="ghost" size="sm" className="text-violet-600">
-                    <Sparkle size={16} />
+                    <MagicWand size={16} />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-96 max-h-96 overflow-auto">
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
-                      <Sparkle size={16} className="text-violet-600" />
+                      <MagicWand size={16} className="text-violet-600" />
                       <Label className="font-medium">AI Suggestions</Label>
                     </div>
                     <div className="prose prose-sm text-sm whitespace-pre-wrap">

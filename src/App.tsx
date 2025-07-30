@@ -368,6 +368,7 @@ function App() {
             <PageTitle title="Session Notes" description="View and export your study notes" />
             <SessionNotes 
               sessions={sessions} 
+              settings={settings}
               onEditSession={editSession}
               onDeleteSession={deleteSession}
             />

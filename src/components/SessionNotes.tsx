@@ -11,6 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { RichTextEditor } from '@/components/RichTextEditor'
+import { AIInsightsPanel } from '@/components/AIInsightsPanel'
 import { 
   DownloadSimple, 
   FileText, 
@@ -24,12 +25,13 @@ import {
   PencilSimple,
   Trash,
   FloppyDisk,
-  X
+  X,
+  Sparkle
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
-import type { StudySession } from '@/App'
+import type { StudySession, AppSettings } from '@/App'
 
 // Type declarations for File System Access API
 declare global {
@@ -55,11 +57,12 @@ interface FileSystemWritableFileStream {
 
 interface SessionNotesProps {
   sessions: StudySession[]
+  settings?: AppSettings
   onEditSession?: (sessionId: string, updatedNotes: string) => void
   onDeleteSession?: (sessionId: string) => void
 }
 
-export function SessionNotes({ sessions, onEditSession, onDeleteSession }: SessionNotesProps) {
+export function SessionNotes({ sessions, settings, onEditSession, onDeleteSession }: SessionNotesProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTopic, setSelectedTopic] = useState('all')
   const [selectedSubtopic, setSelectedSubtopic] = useState('all')
@@ -70,6 +73,8 @@ export function SessionNotes({ sessions, onEditSession, onDeleteSession }: Sessi
   const [downloadDialogOpen, setDownloadDialogOpen] = useState(false)
   const [downloadSessionId, setDownloadSessionId] = useState<string | null>(null)
   const [downloadAllDialogOpen, setDownloadAllDialogOpen] = useState(false)
+  const [aiInsightsOpen, setAiInsightsOpen] = useState(false)
+  const [selectedSessionForAI, setSelectedSessionForAI] = useState<StudySession | null>(null)
 
   // Get unique topics and subtopics from sessions
   const { topics, subtopics } = useMemo(() => {
@@ -177,6 +182,11 @@ export function SessionNotes({ sessions, onEditSession, onDeleteSession }: Sessi
 
   const openDownloadAllDialog = () => {
     setDownloadAllDialogOpen(true)
+  }
+
+  const openAIInsights = (session: StudySession) => {
+    setSelectedSessionForAI(session)
+    setAiInsightsOpen(true)
   }
 
   const sanitizeFilename = (filename: string): string => {
@@ -1005,6 +1015,25 @@ export function SessionNotes({ sessions, onEditSession, onDeleteSession }: Sessi
                   </div>
                   
                   <div className="flex items-center gap-2">
+                    {/* AI Insights Button */}
+                    {settings?.aiSettings?.enabled && settings?.aiSettings?.apiKey && session.notes.trim() && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              onClick={() => openAIInsights(session)}
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-violet-600 hover:text-violet-700"
+                            >
+                              <Sparkle size={14} />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Get AI insights for this session</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+
                     {onEditSession && (
                       <TooltipProvider>
                         <Tooltip>
@@ -1272,6 +1301,21 @@ export function SessionNotes({ sessions, onEditSession, onDeleteSession }: Sessi
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* AI Insights Panel */}
+      {selectedSessionForAI && settings && (
+        <AIInsightsPanel
+          session={selectedSessionForAI}
+          settings={settings}
+          open={aiInsightsOpen}
+          onOpenChange={(open) => {
+            setAiInsightsOpen(open)
+            if (!open) {
+              setSelectedSessionForAI(null)
+            }
+          }}
+        />
+      )}
     </div>
   )
 }

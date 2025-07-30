@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { Play, Pause, Square, SkipForward, Coffee, BookOpen, Eye, EyeSlash, Settings } from '@phosphor-icons/react'
+import { Play, Pause, Square, SkipForward, Coffee, BookOpen, Eye, EyeSlash, Settings, ArrowsOut, ArrowsIn } from '@phosphor-icons/react'
 import { RichTextEditor } from '@/components/RichTextEditor'
 import { toast } from 'sonner'
 import type { StudySession, AppSettings } from '@/App'
@@ -45,9 +45,11 @@ export function StudyTimer({
   const [completedSessions, setCompletedSessions] = useState(0)
   const [currentCycle, setCurrentCycle] = useState(1)
   const [localDistractionFree, setLocalDistractionFree] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   
   const intervalRef = useRef<NodeJS.Timeout>()
   const startTimeRef = useRef<Date>()
+  const fullscreenContainerRef = useRef<HTMLDivElement>(null)
 
   // Show split layout when timer is running/paused and it's a study session
   const showSplitLayout = showEditor && sessionType === 'study' && (timerState === 'running' || timerState === 'paused')
@@ -104,6 +106,13 @@ export function StudyTimer({
         toggleDistractionFree()
       }
       
+      // F11 to toggle fullscreen during active study sessions
+      if (e.key === 'F11' && sessionType === 'study' && 
+          (timerState === 'running' || timerState === 'paused')) {
+        e.preventDefault()
+        toggleFullscreen()
+      }
+      
       // Space bar to pause/resume in distraction-free mode
       if (e.code === 'Space' && isDistractionFree && sessionType === 'study') {
         e.preventDefault()
@@ -113,17 +122,73 @@ export function StudyTimer({
           resumeTimer()
         }
       }
+      
+      // Escape to exit fullscreen
+      if (e.key === 'Escape' && isFullscreen) {
+        exitFullscreen()
+      }
     }
 
     window.addEventListener('keydown', handleKeyPress)
     return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [sessionType, timerState, localDistractionFree, settings.distractionFreeMode])
+  }, [sessionType, timerState, localDistractionFree, settings.distractionFreeMode, isFullscreen])
 
   // Toggle local distraction-free mode
   const toggleDistractionFree = () => {
     setLocalDistractionFree(!localDistractionFree)
     toast.info(!localDistractionFree ? 'Distraction-free mode enabled' : 'Distraction-free mode disabled')
   }
+
+  // Toggle fullscreen mode
+  const toggleFullscreen = () => {
+    if (!isFullscreen) {
+      enterFullscreen()
+    } else {
+      exitFullscreen()
+    }
+  }
+
+  const enterFullscreen = async () => {
+    try {
+      if (fullscreenContainerRef.current) {
+        if (document.fullscreenElement) {
+          await document.exitFullscreen()
+        }
+        await fullscreenContainerRef.current.requestFullscreen()
+        setIsFullscreen(true)
+        toast.success('Fullscreen mode enabled', {
+          description: 'Press F11 or Escape to exit fullscreen'
+        })
+      }
+    } catch (error) {
+      console.error('Failed to enter fullscreen:', error)
+      toast.error('Could not enter fullscreen mode')
+    }
+  }
+
+  const exitFullscreen = async () => {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen()
+      }
+      setIsFullscreen(false)
+      toast.info('Fullscreen mode disabled')
+    } catch (error) {
+      console.error('Failed to exit fullscreen:', error)
+    }
+  }
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement && isFullscreen) {
+        setIsFullscreen(false)
+      }
+    }
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
+  }, [isFullscreen])
 
   const playNotificationSound = (frequency = 800) => {
     if (settings.audioNotifications) {
@@ -161,6 +226,12 @@ export function StudyTimer({
         }
         
         onSessionComplete(session)
+        
+        // Exit fullscreen when session completes
+        if (isFullscreen) {
+          exitFullscreen()
+        }
+        
         toast.success('Study session completed and notes auto-saved!', {
           description: `You studied ${selectedTopic} - ${selectedSubtopic} for ${actualDuration} minutes.`,
           duration: 4000,
@@ -232,17 +303,61 @@ export function StudyTimer({
   }
 
   const stopTimer = () => {
+    // Auto-save notes if there's content and proper session info
+    if (sessionType === 'study' && notes.trim() && startTimeRef.current && 
+        selectedTopic && selectedSubtopic) {
+      const actualDuration = Math.round((totalTime - timeLeft) / 60)
+      const session: StudySession = {
+        id: Date.now().toString(),
+        topic: selectedTopic,
+        subtopic: selectedSubtopic,
+        duration: actualDuration,
+        completedAt: new Date(),
+        notes: notes
+      }
+      
+      onSessionComplete(session)
+      toast.success('Session stopped and notes saved!', {
+        description: `Study time: ${actualDuration} minutes`
+      })
+    }
+    
     setTimerState('idle')
     setTimeLeft(totalTime)
     if (sessionType === 'study') {
       setShowEditor(false)
       setNotes('')
+      // Exit fullscreen when stopping timer
+      if (isFullscreen) {
+        exitFullscreen()
+      }
     }
-    toast.info('Timer stopped')
+    
+    if (!notes.trim() || !selectedTopic || !selectedSubtopic) {
+      toast.info('Timer stopped')
+    }
   }
 
   const skipToNotes = () => {
     if (timerState === 'running' || timerState === 'paused') {
+      // Auto-save notes before finishing early
+      if (startTimeRef.current && (selectedTopic && selectedSubtopic) && notes.trim()) {
+        const actualDuration = Math.round((totalTime - timeLeft) / 60)
+        const session: StudySession = {
+          id: Date.now().toString(),
+          topic: selectedTopic,
+          subtopic: selectedSubtopic,
+          duration: actualDuration,
+          completedAt: new Date(),
+          notes: notes
+        }
+        
+        onSessionComplete(session)
+        toast.success('Session ended early and notes saved!', {
+          description: `Study time: ${actualDuration} minutes`
+        })
+      }
+      
       handleTimerComplete()
     }
   }
@@ -328,6 +443,91 @@ export function StudyTimer({
   const availableSubtopics = selectedTopic && selectedTopic !== 'new' 
     ? subtopics[selectedTopic] || [] 
     : []
+
+  // Fullscreen Note-Taking Mode
+  if (isFullscreen && showSplitLayout) {
+    return (
+      <div 
+        ref={fullscreenContainerRef}
+        className="fixed inset-0 z-50 bg-background h-screen flex flex-col"
+      >
+        {/* Minimal Fullscreen Header */}
+        <div className="w-full bg-muted/10 border-b border-border/30 p-2 flex-shrink-0">
+          <div className="flex items-center justify-between max-w-6xl mx-auto">
+            <div className="flex items-center gap-3">
+              <div className="font-mono text-lg font-bold text-foreground">
+                {formatTime(timeLeft)}
+              </div>
+              <div className="w-32">
+                <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-primary transition-all duration-1000 ease-linear rounded-full"
+                    style={{ width: `${progressPercentage}%` }}
+                  />
+                </div>
+              </div>
+              <div className="text-xs text-muted-foreground font-ui">
+                {selectedTopic} · {selectedSubtopic}
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-1">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      onClick={timerState === 'running' ? pauseTimer : resumeTimer}
+                      variant="ghost" 
+                      size="sm"
+                      className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                    >
+                      {timerState === 'running' ? <Pause size={14} /> : <Play size={14} />}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{timerState === 'running' ? 'Pause (Space)' : 'Resume (Space)'}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      onClick={exitFullscreen}
+                      variant="ghost" 
+                      size="sm"
+                      className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                    >
+                      <ArrowsIn size={14} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Exit Fullscreen (F11/Esc)</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </div>
+        </div>
+
+        {/* Fullscreen Notes Editor */}
+        <div className="flex-1 min-h-0 p-3">
+          <div className="h-full bg-card/50 rounded-lg border border-border/50">
+            <div className="h-full p-4">
+              <RichTextEditor
+                content={notes}
+                onChange={setNotes}
+                placeholder="Focus on your study notes in fullscreen..."
+                className="h-full"
+                editorHeight="100%"
+                showAIFeatures={true}
+                settings={settings}
+                topic={selectedTopic}
+                subtopic={selectedSubtopic}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (showSplitLayout && isDistractionFree) {
     return (
@@ -481,7 +681,7 @@ export function StudyTimer({
                           <Pause size={16} />
                           Pause
                         </Button>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-4 gap-2">
                           <Button 
                             onClick={stopTimer} 
                             variant="destructive" 
@@ -500,6 +700,22 @@ export function StudyTimer({
                             <SkipForward size={12} />
                             Finish
                           </Button>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  onClick={toggleFullscreen} 
+                                  variant="ghost" 
+                                  size="sm"
+                                  className="flex items-center gap-1 font-ui text-xs"
+                                >
+                                  <ArrowsOut size={12} />
+                                  Full
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Fullscreen notes (F11)</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
