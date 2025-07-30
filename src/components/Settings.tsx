@@ -50,6 +50,12 @@ export function Settings({
   useEffect(() => {
     setLocalSettings(settings)
     setHasUnsavedChanges(false)
+    
+    // Initialize custom model if it exists
+    if (settings.aiSettings?.customModel) {
+      setCustomModel(settings.aiSettings.customModel)
+      setUseCustomModel(true)
+    }
   }, [settings])
 
   // Sync database type and connection string when settings change
@@ -139,7 +145,7 @@ export function Settings({
   }
 
   const testAIConnection = async () => {
-    if (!localSettings.ai?.apiKey?.trim()) {
+    if (!localSettings.aiSettings?.apiKey?.trim()) {
       toast.error('Please enter an API key')
       return
     }
@@ -150,20 +156,14 @@ export function Settings({
       // Test the AI connection with a simple prompt
       const { StudyFlowAI } = await import('@/lib/ai')
       const ai = new StudyFlowAI({
-        apiKey: localSettings.ai?.apiKey || '',
-        model: localSettings.ai?.model || 'gemini-1.5-flash',
-        temperature: localSettings.ai?.temperature || 0.7,
-        maxTokens: localSettings.ai?.maxTokens || 4096
+        enabled: localSettings.aiSettings?.enabled || false,
+        apiKey: localSettings.aiSettings?.apiKey || '',
+        model: useCustomModel ? customModel : (localSettings.aiSettings?.model || 'gemini-1.5-flash'),
+        temperature: localSettings.aiSettings?.temperature || 0.7,
+        maxTokens: localSettings.aiSettings?.maxTokens || 4096
       })
 
-      const testResponse = await ai.customPrompt('Say "Hello from StudyFlow AI!" if you can read this.', {
-        id: 'test',
-        topic: 'Test',
-        subtopic: 'Connection',
-        duration: 1,
-        completedAt: new Date(),
-        notes: 'Test connection'
-      })
+      const testResponse = await ai.customPrompt('Say "Hello from StudyFlow AI!" if you can read this.')
 
       if (testResponse.success) {
         toast.success('AI connection successful!')
@@ -694,9 +694,9 @@ export function Settings({
                 <div className="flex items-center gap-3">
                   <Switch
                     id="ai-enabled"
-                    checked={localSettings.ai?.enabled || false}
+                    checked={localSettings.aiSettings?.enabled || false}
                     onCheckedChange={(checked) => updateLocalSettings({ 
-                      ai: { ...(localSettings.ai || {}), enabled: checked } 
+                      aiSettings: { ...(localSettings.aiSettings || {}), enabled: checked } 
                     })}
                   />
                   <span className="text-sm text-muted-foreground font-ui">
@@ -705,7 +705,7 @@ export function Settings({
                 </div>
               </div>
 
-              {localSettings.ai?.enabled && (
+              {localSettings.aiSettings?.enabled && (
                 <>
                   {/* API Key */}
                   <div className="space-y-2">
@@ -716,9 +716,9 @@ export function Settings({
                           id="ai-api-key"
                           type={showApiKey ? "text" : "password"}
                           placeholder="Enter your Google AI API key"
-                          value={localSettings.ai?.apiKey || ''}
+                          value={localSettings.aiSettings?.apiKey || ''}
                           onChange={(e) => updateLocalSettings({ 
-                            ai: { ...(localSettings.ai || {}), apiKey: e.target.value } 
+                            aiSettings: { ...(localSettings.aiSettings || {}), apiKey: e.target.value } 
                           })}
                           className="font-ui pr-10"
                         />
@@ -743,28 +743,77 @@ export function Settings({
                   </div>
 
                   {/* Model Selection */}
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <Label htmlFor="ai-model" className="font-ui">AI Model</Label>
-                    <Select 
-                      value={localSettings.ai?.model || 'gemini-1.5-flash'} 
-                      onValueChange={(value) => updateLocalSettings({ 
-                        ai: { ...(localSettings.ai || {}), model: value } 
-                      })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select AI model" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {AVAILABLE_MODELS.map(model => (
-                          <SelectItem key={model.value} value={model.value}>
-                            <div className="flex flex-col items-start">
-                              <span className="font-medium">{model.label}</span>
-                              <span className="text-xs text-muted-foreground">{model.description}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    
+                    {/* Custom Model Toggle */}
+                    <div className="flex items-center gap-3 mb-2">
+                      <Switch
+                        id="use-custom-model"
+                        checked={useCustomModel}
+                        onCheckedChange={(checked) => {
+                          setUseCustomModel(checked)
+                          if (!checked) {
+                            // Reset to default model when disabling custom
+                            updateLocalSettings({ 
+                              aiSettings: { 
+                                ...(localSettings.aiSettings || {}), 
+                                model: 'gemini-1.5-flash',
+                                customModel: undefined
+                              } 
+                            })
+                            setCustomModel('')
+                          }
+                        }}
+                      />
+                      <span className="text-sm text-muted-foreground font-ui">
+                        Use custom model
+                      </span>
+                    </div>
+
+                    {useCustomModel ? (
+                      <div className="space-y-2">
+                        <Input
+                          placeholder="Enter custom model name (e.g., gpt-3.5-turbo, claude-3-opus)"
+                          value={customModel}
+                          onChange={(e) => {
+                            setCustomModel(e.target.value)
+                            updateLocalSettings({ 
+                              aiSettings: { 
+                                ...(localSettings.aiSettings || {}), 
+                                customModel: e.target.value,
+                                model: e.target.value // Update the main model field too
+                              } 
+                            })
+                          }}
+                          className="font-ui"
+                        />
+                        <p className="text-xs text-muted-foreground font-ui">
+                          Enter the exact model name as required by your API provider
+                        </p>
+                      </div>
+                    ) : (
+                      <Select 
+                        value={localSettings.aiSettings?.model || 'gemini-1.5-flash'} 
+                        onValueChange={(value) => updateLocalSettings({ 
+                          aiSettings: { ...(localSettings.aiSettings || {}), model: value } 
+                        })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select AI model" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {AVAILABLE_MODELS.map(model => (
+                            <SelectItem key={model.value} value={model.value}>
+                              <div className="flex flex-col items-start">
+                                <span className="font-medium">{model.label}</span>
+                                <span className="text-xs text-muted-foreground">{model.description}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
 
                   {/* Temperature */}
@@ -776,15 +825,15 @@ export function Settings({
                         min={0}
                         max={1}
                         step={0.1}
-                        value={[localSettings.ai?.temperature || 0.7]}
+                        value={[localSettings.aiSettings?.temperature || 0.7]}
                         onValueChange={([value]) => updateLocalSettings({ 
-                          ai: { ...(localSettings.ai || {}), temperature: value } 
+                          aiSettings: { ...(localSettings.aiSettings || {}), temperature: value } 
                         })}
                         className="w-full"
                       />
                       <div className="flex justify-between text-xs text-muted-foreground font-ui">
                         <span>Conservative (0.0)</span>
-                        <span>Current: {localSettings.ai?.temperature || 0.7}</span>
+                        <span>Current: {localSettings.aiSettings?.temperature || 0.7}</span>
                         <span>Creative (1.0)</span>
                       </div>
                     </div>
@@ -803,14 +852,14 @@ export function Settings({
                         min="512"
                         max="8192"
                         step="256"
-                        value={localSettings.ai?.maxTokens || 4096}
+                        value={localSettings.aiSettings?.maxTokens || 4096}
                         onChange={(e) => updateLocalSettings({ 
-                          ai: { ...(localSettings.ai || {}), maxTokens: parseInt(e.target.value) || 4096 } 
+                          aiSettings: { ...(localSettings.aiSettings || {}), maxTokens: parseInt(e.target.value) || 4096 } 
                         })}
                         className="w-full sm:w-32 font-ui"
                       />
                       <span className="text-sm text-muted-foreground font-ui">
-                        tokens (current: {localSettings.ai?.maxTokens || 4096})
+                        tokens (current: {localSettings.aiSettings?.maxTokens || 4096})
                       </span>
                     </div>
                   </div>
@@ -820,7 +869,7 @@ export function Settings({
                     <div className="flex flex-col sm:flex-row gap-3">
                       <Button
                         onClick={testAIConnection}
-                        disabled={testingAI || !localSettings.ai?.apiKey?.trim()}
+                        disabled={testingAI || !localSettings.aiSettings?.apiKey?.trim()}
                         variant="outline"
                         className="flex items-center gap-2 font-ui flex-1 sm:flex-none"
                       >
@@ -840,7 +889,7 @@ export function Settings({
                   </div>
 
                   {/* AI Status */}
-                  {localSettings.ai?.apiKey && (
+                  {localSettings.aiSettings?.apiKey && (
                     <Card className="p-4 bg-violet-50/50 border border-violet-200/50">
                       <div className="flex items-start gap-3">
                         <div className="p-2 bg-violet-100 rounded-lg">
@@ -849,6 +898,7 @@ export function Settings({
                         <div>
                           <h3 className="font-medium font-ui mb-2 text-violet-700">AI Features Available</h3>
                           <div className="text-sm text-violet-600/80 font-ui space-y-1">
+                            <p>• Live note enhancement during study sessions</p>
                             <p>• Enhance study notes with AI suggestions</p>
                             <p>• Generate summaries and key insights</p>
                             <p>• Create practice questions from notes</p>
@@ -862,7 +912,7 @@ export function Settings({
                 </>
               )}
 
-              {!localSettings.ai?.enabled && (
+              {!localSettings.aiSettings?.enabled && (
                 <Card className="p-4 bg-muted/50 border border-muted">
                   <div className="flex items-start gap-3">
                     <div className="p-2 bg-muted rounded-lg">

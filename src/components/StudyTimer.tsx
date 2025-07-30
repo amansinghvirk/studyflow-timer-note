@@ -375,6 +375,10 @@ export function StudyTimer({
                 placeholder="Focus on your notes..."
                 className="h-full"
                 editorHeight="100%"
+                showAIFeatures={true}
+                settings={settings}
+                topic={selectedTopic}
+                subtopic={selectedSubtopic}
               />
             </div>
           </div>
@@ -538,6 +542,10 @@ export function StudyTimer({
                   placeholder="Start taking notes for your study session..."
                   className="h-full"
                   editorHeight="100%"
+                  showAIFeatures={true}
+                  settings={settings}
+                  topic={selectedTopic}
+                  subtopic={selectedSubtopic}
                 />
               </div>
             </CardContent>
@@ -761,6 +769,10 @@ export function StudyTimer({
               content={notes}
               onChange={setNotes}
               placeholder="Add any final notes for your session..."
+              showAIFeatures={true}
+              settings={settings}
+              topic={selectedTopic}
+              subtopic={selectedSubtopic}
             />
           </CardContent>
         </Card>

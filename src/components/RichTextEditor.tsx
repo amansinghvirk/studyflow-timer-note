@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { 
   TextB, 
   TextItalic, 
@@ -21,10 +22,14 @@ import {
   Link as LinkIcon,
   Image as ImageIcon,
   Palette,
-  Smiley
+  Smiley,
+  MagicWand,
+  Sparkle
 } from '@phosphor-icons/react'
 import { useState, useCallback } from 'react'
 import { toast } from 'sonner'
+import { generateLiveNotesEnhancement } from '@/lib/ai'
+import type { AppSettings } from '@/App'
 
 interface RichTextEditorProps {
   content: string
@@ -32,6 +37,10 @@ interface RichTextEditorProps {
   placeholder?: string
   className?: string
   editorHeight?: string
+  showAIFeatures?: boolean
+  settings?: AppSettings
+  topic?: string
+  subtopic?: string
 }
 
 const PRESET_COLORS = [
@@ -45,10 +54,23 @@ const EMOJI_STICKERS = [
   '📚', '🧠', '⚡', '🎉', '👍', '❤️', '🚀', '💪'
 ]
 
-export function RichTextEditor({ content, onChange, placeholder, className, editorHeight = "200px" }: RichTextEditorProps) {
+export function RichTextEditor({ 
+  content, 
+  onChange, 
+  placeholder, 
+  className, 
+  editorHeight = "200px",
+  showAIFeatures = false,
+  settings,
+  topic,
+  subtopic
+}: RichTextEditorProps) {
   const [linkUrl, setLinkUrl] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [selectedColor, setSelectedColor] = useState('#000000')
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false)
+  const [aiSuggestions, setAiSuggestions] = useState('')
+  const [showAISuggestions, setShowAISuggestions] = useState(false)
 
   const editor = useEditor({
     extensions: [
@@ -109,11 +131,63 @@ export function RichTextEditor({ content, onChange, placeholder, className, edit
     editor.chain().focus().insertContent(emoji).run()
   }, [editor])
 
+  const generateAISuggestions = useCallback(async () => {
+    if (!settings?.aiSettings?.enabled || !settings?.aiSettings?.apiKey || !topic || !subtopic) {
+      toast.error('AI features not configured or topic/subtopic missing')
+      return
+    }
+
+    if (!content.trim()) {
+      toast.error('Please write some notes first to get AI suggestions')
+      return
+    }
+
+    setIsGeneratingAI(true)
+    
+    try {
+      const result = await generateLiveNotesEnhancement(
+        content,
+        topic,
+        subtopic,
+        settings.aiSettings
+      )
+
+      if (result.success && result.suggestions) {
+        setAiSuggestions(result.suggestions)
+        setShowAISuggestions(true)
+        toast.success('AI suggestions generated!')
+      } else {
+        toast.error(result.error || 'Failed to generate AI suggestions')
+      }
+    } catch (error) {
+      toast.error('Failed to connect to AI service')
+      console.error('AI suggestions error:', error)
+    } finally {
+      setIsGeneratingAI(false)
+    }
+  }, [content, topic, subtopic, settings?.aiSettings])
+
+  const insertAISuggestion = useCallback((suggestion: string) => {
+    if (!editor) return
+    
+    // Insert the suggestion at the current cursor position
+    editor.chain().focus().insertContent(`\n\n**AI Suggestion:**\n${suggestion}\n`).run()
+    setShowAISuggestions(false)
+    toast.success('AI suggestion added to notes')
+  }, [editor])
+
   const applyColor = useCallback((color: string) => {
     if (!editor) return
     editor.chain().focus().setColor(color).run()
     setSelectedColor(color)
   }, [editor])
+
+  // Check if AI features should be available
+  const isAIAvailable = showAIFeatures && 
+                       settings?.aiSettings?.enabled && 
+                       settings?.aiSettings?.apiKey && 
+                       topic && 
+                       subtopic
 
   if (!editor) {
     return null
@@ -291,6 +365,74 @@ export function RichTextEditor({ content, onChange, placeholder, className, edit
             </div>
           </PopoverContent>
         </Popover>
+
+        {/* AI Features */}
+        {isAIAvailable && (
+          <>
+            <Separator orientation="vertical" className="h-6" />
+            
+            {/* AI Enhancement */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={generateAISuggestions}
+                    disabled={isGeneratingAI}
+                    className="flex items-center gap-1"
+                  >
+                    {isGeneratingAI ? (
+                      <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <MagicWand size={16} className="text-violet-600" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Get AI suggestions for your notes</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            {/* AI Suggestions Panel */}
+            {showAISuggestions && (
+              <Popover open={showAISuggestions} onOpenChange={setShowAISuggestions}>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="sm" className="text-violet-600">
+                    <Sparkle size={16} />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-96 max-h-96 overflow-auto">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Sparkle size={16} className="text-violet-600" />
+                      <Label className="font-medium">AI Suggestions</Label>
+                    </div>
+                    <div className="prose prose-sm text-sm whitespace-pre-wrap">
+                      {aiSuggestions}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        size="sm" 
+                        onClick={() => insertAISuggestion(aiSuggestions)}
+                        className="flex items-center gap-1"
+                      >
+                        <MagicWand size={12} />
+                        Add to Notes
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => setShowAISuggestions(false)}
+                      >
+                        Close
+                      </Button>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
+          </>
+        )}
       </div>
 
       {/* Editor */}
