@@ -29,42 +29,48 @@ export interface StudyFlowAIConfig {
   maxTokens: number
 }
 
-export const AVAILABLE_MODELS: AIModel[] = [
+export const AVAILABLE_MODELS = [
   { 
-    id: 'gemini-1.5-pro', 
-    name: 'Gemini 1.5 Pro', 
-    label: 'Gemini 1.5 Pro', 
+    value: 'gemini-1.5-pro', 
+    label: 'Gemini 1.5 Pro',
+    description: 'Most capable Google model for complex tasks',
     provider: 'google' 
   },
   { 
-    id: 'gemini-1.5-flash', 
-    name: 'Gemini 1.5 Flash', 
-    label: 'Gemini 1.5 Flash', 
+    value: 'gemini-1.5-flash', 
+    label: 'Gemini 1.5 Flash',
+    description: 'Fast and efficient for most study tasks',
     provider: 'google' 
   },
   { 
-    id: 'gemini-1.0-pro', 
-    name: 'Gemini 1.0 Pro', 
-    label: 'Gemini 1.0 Pro', 
+    value: 'gemini-1.0-pro', 
+    label: 'Gemini 1.0 Pro',
+    description: 'Reliable option for general study assistance',
     provider: 'google' 
   },
   { 
-    id: 'gpt-4o', 
-    name: 'GPT-4o', 
-    label: 'GPT-4o', 
+    value: 'gpt-4o', 
+    label: 'GPT-4o',
+    description: 'Advanced OpenAI model (requires OpenAI API key)',
     provider: 'openai' 
   },
   { 
-    id: 'gpt-4o-mini', 
-    name: 'GPT-4o Mini', 
-    label: 'GPT-4o Mini', 
+    value: 'gpt-4o-mini', 
+    label: 'GPT-4o Mini',
+    description: 'Cost-effective OpenAI model (requires OpenAI API key)',
     provider: 'openai' 
   },
   { 
-    id: 'custom', 
-    name: 'Custom Model', 
-    label: 'Custom Model', 
-    provider: 'custom' 
+    value: 'claude-3-opus', 
+    label: 'Claude 3 Opus',
+    description: 'Anthropic\'s most capable model (requires Anthropic API key)',
+    provider: 'anthropic' 
+  },
+  { 
+    value: 'claude-3-sonnet', 
+    label: 'Claude 3 Sonnet',
+    description: 'Balanced Claude model for most tasks (requires Anthropic API key)',
+    provider: 'anthropic' 
   }
 ]
 
@@ -75,13 +81,13 @@ export const DEFAULT_AI_SETTINGS: AISettings = {
   maxTokens: 1000
 }
 
-// Helper function to get model by ID
-export function getModelById(modelId: string): AIModel | undefined {
-  return AVAILABLE_MODELS.find(model => model.id === modelId)
+// Helper function to get model by value
+export function getModelByValue(modelValue: string) {
+  return AVAILABLE_MODELS.find(model => model.value === modelValue)
 }
 
 // Helper function to get models by provider
-export function getModelsByProvider(provider: string): AIModel[] {
+export function getModelsByProvider(provider: string) {
   return AVAILABLE_MODELS.filter(model => model.provider === provider)
 }
 
@@ -124,15 +130,15 @@ Keep your response concise but actionable. Focus on enhancing learning and reten
 }
 
 // Test AI connection
-export async function testAIConnection(apiKey: string, modelId: string): Promise<{ success: boolean; message: string }> {
+export async function testAIConnection(apiKey: string, modelValue: string): Promise<{ success: boolean; message: string }> {
   try {
-    const model = getModelById(modelId)
+    const model = getModelByValue(modelValue)
     if (!model) {
       return { success: false, message: 'Invalid model selected' }
     }
 
     if (!validateApiKey(apiKey, model.provider)) {
-      return { success: false, message: 'Invalid API key format' }
+      return { success: false, message: 'Invalid API key format for selected provider' }
     }
 
     // Simple test prompt
@@ -155,16 +161,20 @@ export async function generateAIInsights(
   notes: string, 
   topic: string, 
   subtopic: string, 
-  settings: AISettings
+  aiSettings: any
 ): Promise<{ success: boolean; insights?: string; error?: string }> {
   try {
-    const model = getModelById(settings.selectedModel)
+    if (!aiSettings?.enabled || !aiSettings?.apiKey) {
+      return { success: false, error: 'AI features not enabled or API key missing' }
+    }
+
+    const model = getModelByValue(aiSettings.model || 'gemini-1.5-flash')
     if (!model) {
       return { success: false, error: 'Invalid model selected' }
     }
 
-    if (!validateApiKey(settings.apiKey, model.provider)) {
-      return { success: false, error: 'Invalid API key' }
+    if (!validateApiKey(aiSettings.apiKey, model.provider)) {
+      return { success: false, error: 'Invalid API key for selected provider' }
     }
 
     const prompt = generateInsightsPrompt(notes, topic, subtopic)
@@ -206,16 +216,20 @@ export async function generateLiveSuggestions(
   currentNotes: string, 
   topic: string, 
   subtopic: string, 
-  settings: AISettings
+  aiSettings: any
 ): Promise<{ success: boolean; suggestions?: string; error?: string }> {
   try {
-    const model = getModelById(settings.selectedModel)
+    if (!aiSettings?.enabled || !aiSettings?.apiKey) {
+      return { success: false, error: 'AI features not enabled or API key missing' }
+    }
+
+    const model = getModelByValue(aiSettings.model || 'gemini-1.5-flash')
     if (!model) {
       return { success: false, error: 'Invalid model selected' }
     }
 
-    if (!validateApiKey(settings.apiKey, model.provider)) {
-      return { success: false, error: 'Invalid API key' }
+    if (!validateApiKey(aiSettings.apiKey, model.provider)) {
+      return { success: false, error: 'Invalid API key for selected provider' }
     }
 
     const sparkPrompt = spark.llmPrompt`Based on these study notes about ${topic} - ${subtopic}, provide 2-3 brief suggestions to improve or expand the content:

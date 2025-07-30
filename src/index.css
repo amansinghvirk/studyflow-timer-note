@@ -152,4 +152,31 @@
       margin-top: 1rem;
     }
   }
+
+  /* Settings tabs enhancements */
+  .settings-tabs [data-state="active"] {
+    position: relative;
+  }
+  
+  .settings-tabs [data-state="active"]::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    border-radius: 1px;
+  }
+
+  /* Smooth animations for settings */
+  .settings-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .settings-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
 }

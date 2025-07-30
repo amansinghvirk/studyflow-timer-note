@@ -148,9 +148,32 @@ export function StudyTimer({
     playNotificationSound(sessionType === 'study' ? 800 : 600)
 
     if (sessionType === 'study') {
-      toast.success('Study session completed!', {
-        description: `You studied ${selectedTopic} - ${selectedSubtopic} for ${settings.defaultDuration} minutes.`
-      })
+      // Auto-save notes when study session completes
+      if (startTimeRef.current && (selectedTopic && selectedSubtopic)) {
+        const actualDuration = Math.round((totalTime - timeLeft) / 60)
+        const session: StudySession = {
+          id: Date.now().toString(),
+          topic: selectedTopic,
+          subtopic: selectedSubtopic,
+          duration: actualDuration,
+          completedAt: new Date(),
+          notes: notes
+        }
+        
+        onSessionComplete(session)
+        toast.success('Study session completed and notes auto-saved!', {
+          description: `You studied ${selectedTopic} - ${selectedSubtopic} for ${actualDuration} minutes.`,
+          duration: 4000,
+          action: {
+            label: "Start Break",
+            onClick: () => switchToBreak()
+          }
+        })
+      } else {
+        toast.success('Study session completed!', {
+          description: `Session duration: ${Math.round((totalTime - timeLeft) / 60)} minutes.`
+        })
+      }
     } else {
       toast.success(`${sessionType === 'longbreak' ? 'Long break' : 'Break'} completed!`, {
         description: 'Ready to get back to studying?'
@@ -712,21 +735,29 @@ export function StudyTimer({
                 {sessionType === 'study' ? (
                   <div className="flex gap-3">
                     <Button 
-                      onClick={saveSession} 
+                      onClick={switchToBreak} 
                       size="lg"
                       className="flex items-center gap-2 font-ui"
                     >
-                      Save & Start Break
+                      <Coffee size={20} />
+                      Start Break Now
                     </Button>
                     <Button 
                       onClick={() => {
-                        saveSession()
+                        // Reset for next session
+                        setNotes('')
+                        setSelectedTopic('')
+                        setSelectedSubtopic('')
+                        setTimerState('idle')
+                        setShowEditor(false)
+                        toast.success('Ready for your next study session!')
                       }} 
                       variant="outline"
                       size="lg"
                       className="flex items-center gap-2 font-ui"
                     >
-                      Save Only
+                      <BookOpen size={20} />
+                      New Study Session
                     </Button>
                   </div>
                 ) : (

@@ -155,11 +155,11 @@ export function Settings({
     try {
       // Test the AI connection with a simple prompt
       const { testAIConnection: testConnection } = await import('@/lib/ai')
-      const modelId = useCustomModel ? 'custom' : (localSettings.aiSettings?.model || 'gemini-1.5-flash')
+      const modelValue = useCustomModel ? customModel : (localSettings.aiSettings?.model || 'gemini-1.5-flash')
       
       const testResponse = await testConnection(
         localSettings.aiSettings?.apiKey || '',
-        modelId
+        modelValue
       )
 
       if (testResponse.success) {
@@ -236,61 +236,63 @@ export function Settings({
       )}
 
       <Tabs defaultValue="general" className="w-full settings-tabs">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 gap-1 md:gap-0 h-auto md:h-12 p-1 bg-muted/50 backdrop-blur-sm border border-border/50 rounded-xl">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 gap-2 md:gap-1 h-auto md:h-14 p-2 bg-gradient-to-r from-muted/30 via-muted/50 to-muted/30 backdrop-blur-sm border border-border/40 rounded-2xl shadow-sm">
           <TabsTrigger 
             value="general" 
-            className="flex items-center gap-2 font-ui justify-center p-3 md:p-4 rounded-lg transition-all duration-200 hover:bg-background/80 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/30"
+            className="flex flex-col md:flex-row items-center gap-1 md:gap-2 font-ui justify-center p-3 md:p-4 rounded-xl transition-all duration-300 hover:bg-background/90 hover:shadow-sm data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/20 data-[state=active]:scale-[1.02] text-xs md:text-sm group"
           >
-            <Clock size={18} className="shrink-0" />
-            <span className="hidden sm:inline">General</span>
+            <Clock size={20} className="shrink-0 group-data-[state=active]:text-primary transition-colors duration-300" />
+            <span className="font-medium">General</span>
           </TabsTrigger>
           <TabsTrigger 
             value="topics" 
-            className="flex items-center gap-2 font-ui justify-center p-3 md:p-4 rounded-lg transition-all duration-200 hover:bg-background/80 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/30"
+            className="flex flex-col md:flex-row items-center gap-1 md:gap-2 font-ui justify-center p-3 md:p-4 rounded-xl transition-all duration-300 hover:bg-background/90 hover:shadow-sm data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/20 data-[state=active]:scale-[1.02] text-xs md:text-sm group"
           >
-            <Tag size={18} className="shrink-0" />
-            <span className="hidden sm:inline">Topics</span>
+            <Tag size={20} className="shrink-0 group-data-[state=active]:text-accent transition-colors duration-300" />
+            <span className="font-medium">Topics</span>
           </TabsTrigger>
           <TabsTrigger 
             value="ai" 
-            className="flex items-center gap-2 font-ui justify-center p-3 md:p-4 rounded-lg transition-all duration-200 hover:bg-background/80 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/30"
+            className="flex flex-col md:flex-row items-center gap-1 md:gap-2 font-ui justify-center p-3 md:p-4 rounded-xl transition-all duration-300 hover:bg-background/90 hover:shadow-sm data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/20 data-[state=active]:scale-[1.02] text-xs md:text-sm group"
           >
-            <Brain size={18} className="shrink-0" />
-            <span className="hidden sm:inline">AI</span>
+            <Brain size={20} className="shrink-0 group-data-[state=active]:text-violet-600 transition-colors duration-300" />
+            <span className="font-medium">AI</span>
           </TabsTrigger>
           <TabsTrigger 
             value="prompts" 
-            className="flex items-center gap-2 font-ui justify-center p-3 md:p-4 rounded-lg transition-all duration-200 hover:bg-background/80 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/30"
+            className="flex flex-col md:flex-row items-center gap-1 md:gap-2 font-ui justify-center p-3 md:p-4 rounded-xl transition-all duration-300 hover:bg-background/90 hover:shadow-sm data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/20 data-[state=active]:scale-[1.02] text-xs md:text-sm group"
           >
-            <TestTube size={18} className="shrink-0" />
-            <span className="hidden sm:inline">Prompts</span>
+            <TestTube size={20} className="shrink-0 group-data-[state=active]:text-orange-500 transition-colors duration-300" />
+            <span className="font-medium">Prompts</span>
           </TabsTrigger>
           <TabsTrigger 
             value="database" 
-            className="flex items-center gap-2 font-ui justify-center p-3 md:p-4 rounded-lg transition-all duration-200 hover:bg-background/80 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/30"
+            className="flex flex-col md:flex-row items-center gap-1 md:gap-2 font-ui justify-center p-3 md:p-4 rounded-xl transition-all duration-300 hover:bg-background/90 hover:shadow-sm data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/20 data-[state=active]:scale-[1.02] text-xs md:text-sm group"
           >
-            <Database size={18} className="shrink-0" />
-            <span className="hidden sm:inline">Database</span>
+            <Database size={20} className="shrink-0 group-data-[state=active]:text-blue-600 transition-colors duration-300" />
+            <span className="font-medium">Database</span>
           </TabsTrigger>
           <TabsTrigger 
             value="about" 
-            className="flex items-center gap-2 font-ui justify-center p-3 md:p-4 rounded-lg transition-all duration-200 hover:bg-background/80 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/30"
+            className="flex flex-col md:flex-row items-center gap-1 md:gap-2 font-ui justify-center p-3 md:p-4 rounded-xl transition-all duration-300 hover:bg-background/90 hover:shadow-sm data-[state=active]:bg-background data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/20 data-[state=active]:scale-[1.02] text-xs md:text-sm group"
           >
-            <Info size={18} className="shrink-0" />
-            <span className="hidden sm:inline">About</span>
+            <Info size={20} className="shrink-0 group-data-[state=active]:text-emerald-600 transition-colors duration-300" />
+            <span className="font-medium">About</span>
           </TabsTrigger>
         </TabsList>
 
         {/* General Settings */}
-        <TabsContent value="general" className="space-y-6 mt-6">
-          <Card className="border-border/50 shadow-sm">
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Clock size={20} className="text-primary" />
+        <TabsContent value="general" className="space-y-6 mt-8">
+          <Card className="border-border/40 shadow-lg shadow-primary/5 bg-gradient-to-b from-card to-card/50 backdrop-blur-sm">
+            <CardHeader className="pb-4 border-b border-border/20">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl border border-primary/20">
+                  <Clock size={24} className="text-primary" />
                 </div>
                 <div>
-                  <CardTitle className="font-display text-xl">Timer Settings</CardTitle>
+                  <CardTitle className="font-display text-2xl bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                    Timer Settings
+                  </CardTitle>
                   <p className="text-sm text-muted-foreground font-ui mt-1">Configure your study and break durations</p>
                 </div>
               </div>
@@ -530,15 +532,17 @@ export function Settings({
         </TabsContent>
 
         {/* Topic Management */}
-        <TabsContent value="topics" className="space-y-6 mt-6">
-          <Card className="border-border/50 shadow-sm">
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-accent/10 rounded-lg">
-                  <Tag size={20} className="text-accent" />
+        <TabsContent value="topics" className="space-y-6 mt-8">
+          <Card className="border-border/40 shadow-lg shadow-accent/5 bg-gradient-to-b from-card to-card/50 backdrop-blur-sm">
+            <CardHeader className="pb-4 border-b border-border/20">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-gradient-to-br from-accent/10 to-accent/5 rounded-xl border border-accent/20">
+                  <Tag size={24} className="text-accent" />
                 </div>
                 <div>
-                  <CardTitle className="font-display text-xl">Manage Topics</CardTitle>
+                  <CardTitle className="font-display text-2xl bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                    Manage Topics
+                  </CardTitle>
                   <p className="text-sm text-muted-foreground font-ui mt-1">Organize your study subjects and subtopics</p>
                 </div>
               </div>
@@ -671,16 +675,18 @@ export function Settings({
         </TabsContent>
 
         {/* AI Settings */}
-        <TabsContent value="ai" className="space-y-6 mt-6">
-          <Card className="border-border/50 shadow-sm">
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-violet-100 rounded-lg">
-                  <Brain size={20} className="text-violet-600" />
+        <TabsContent value="ai" className="space-y-6 mt-8">
+          <Card className="border-border/40 shadow-lg shadow-violet-500/5 bg-gradient-to-b from-card to-card/50 backdrop-blur-sm">
+            <CardHeader className="pb-4 border-b border-border/20">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-gradient-to-br from-violet-100/80 to-violet-50/80 rounded-xl border border-violet-200/50">
+                  <Brain size={24} className="text-violet-600" />
                 </div>
                 <div>
-                  <CardTitle className="font-display text-xl">AI Assistant Settings</CardTitle>
-                  <p className="text-sm text-muted-foreground font-ui mt-1">Configure Google AI integration for note enhancement</p>
+                  <CardTitle className="font-display text-2xl bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                    AI Assistant Settings
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground font-ui mt-1">Configure AI integration for note enhancement</p>
                 </div>
               </div>
             </CardHeader>
@@ -934,15 +940,17 @@ export function Settings({
         </TabsContent>
 
         {/* Database Settings */}
-        <TabsContent value="database" className="space-y-6 mt-6">
-          <Card className="border-border/50 shadow-sm">
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-secondary/20 rounded-lg">
-                  <Database size={20} className="text-secondary-foreground" />
+        <TabsContent value="database" className="space-y-6 mt-8">
+          <Card className="border-border/40 shadow-lg shadow-blue-500/5 bg-gradient-to-b from-card to-card/50 backdrop-blur-sm">
+            <CardHeader className="pb-4 border-b border-border/20">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-gradient-to-br from-secondary/20 to-secondary/10 rounded-xl border border-secondary/30">
+                  <Database size={24} className="text-secondary-foreground" />
                 </div>
                 <div>
-                  <CardTitle className="font-display text-xl">External Database</CardTitle>
+                  <CardTitle className="font-display text-2xl bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                    External Database
+                  </CardTitle>
                   <p className="text-sm text-muted-foreground font-ui mt-1">Connect to external storage for data backup</p>
                 </div>
               </div>
