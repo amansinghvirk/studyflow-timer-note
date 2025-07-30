@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Play, Pause, Square, SkipForward, Coffee, BookOpen, Eye, EyeSlash, Settings, ArrowsOut, ArrowsIn } from '@phosphor-icons/react'
 import { RichTextEditor } from '@/components/RichTextEditor'
+import { FullscreenEditor } from '@/components/FullscreenEditor'
 import { toast } from 'sonner'
 import type { StudySession, AppSettings } from '@/App'
 
@@ -46,6 +47,7 @@ export function StudyTimer({
   const [currentCycle, setCurrentCycle] = useState(1)
   const [localDistractionFree, setLocalDistractionFree] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [showFullscreenEditor, setShowFullscreenEditor] = useState(false)
   
   const intervalRef = useRef<NodeJS.Timeout>()
   const startTimeRef = useRef<Date>()
@@ -768,10 +770,30 @@ export function StudyTimer({
         <div className="flex-1 min-w-0">
           <Card className="h-full flex flex-col">
             <CardHeader className="flex-shrink-0 pb-4">
-              <CardTitle className="font-display text-xl">Session Notes</CardTitle>
-              <p className="text-sm text-muted-foreground font-ui">
-                Take notes while you study • {selectedTopic} - {selectedSubtopic}
-              </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="font-display text-xl">Session Notes</CardTitle>
+                  <p className="text-sm text-muted-foreground font-ui">
+                    Take notes while you study • {selectedTopic} - {selectedSubtopic}
+                  </p>
+                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        onClick={() => setShowFullscreenEditor(true)} 
+                        variant="outline" 
+                        size="sm"
+                        className="flex items-center gap-2 font-ui"
+                      >
+                        <ArrowsOut size={16} />
+                        Fullscreen
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Open fullscreen note editor</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             </CardHeader>
             <CardContent className="flex-1 overflow-hidden">
               <div className="h-full overflow-auto">
@@ -1024,6 +1046,27 @@ export function StudyTimer({
           </CardContent>
         </Card>
       )}
+
+      {/* Fullscreen Editor Modal */}
+      <FullscreenEditor
+        isOpen={showFullscreenEditor}
+        onClose={() => setShowFullscreenEditor(false)}
+        content={notes}
+        onChange={setNotes}
+        topic={selectedTopic}
+        subtopic={selectedSubtopic}
+        settings={settings}
+        timeLeft={timeLeft}
+        totalTime={totalTime}
+        timerState={timerState}
+        onSave={() => {
+          // Auto-save current session if in progress
+          if (timerState === 'running' || timerState === 'paused') {
+            toast.success('Notes saved during session')
+          }
+        }}
+        autoSave={true}
+      />
     </div>
   )
 }

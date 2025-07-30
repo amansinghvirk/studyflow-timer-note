@@ -11,6 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { RichTextEditor } from '@/components/RichTextEditor'
+import { FullscreenEditor } from '@/components/FullscreenEditor'
 import { AIInsightsPanel } from '@/components/AIInsightsPanel'
 import { 
   DownloadSimple, 
@@ -26,7 +27,8 @@ import {
   Trash,
   FloppyDisk,
   X,
-  Sparkle
+  Sparkle,
+  ArrowsOut
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import html2canvas from 'html2canvas'
@@ -75,6 +77,8 @@ export function SessionNotes({ sessions, settings, onEditSession, onDeleteSessio
   const [downloadAllDialogOpen, setDownloadAllDialogOpen] = useState(false)
   const [aiInsightsOpen, setAiInsightsOpen] = useState(false)
   const [selectedSessionForAI, setSelectedSessionForAI] = useState<StudySession | null>(null)
+  const [showFullscreenEditor, setShowFullscreenEditor] = useState(false)
+  const [fullscreenSession, setFullscreenSession] = useState<StudySession | null>(null)
 
   // Get unique topics and subtopics from sessions
   const { topics, subtopics } = useMemo(() => {
@@ -1051,6 +1055,26 @@ export function SessionNotes({ sessions, settings, onEditSession, onDeleteSessio
                         </Tooltip>
                       </TooltipProvider>
                     )}
+
+                    {/* Fullscreen View Button */}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            onClick={() => {
+                              setFullscreenSession(session)
+                              setShowFullscreenEditor(true)
+                            }}
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                          >
+                            <ArrowsOut size={14} />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>View in fullscreen</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     
                     {onDeleteSession && (
                       <TooltipProvider>
@@ -1314,6 +1338,37 @@ export function SessionNotes({ sessions, settings, onEditSession, onDeleteSessio
               setSelectedSessionForAI(null)
             }
           }}
+        />
+      )}
+
+      {/* Fullscreen Editor for Viewing Notes */}
+      {fullscreenSession && (
+        <FullscreenEditor
+          isOpen={showFullscreenEditor}
+          onClose={() => {
+            setShowFullscreenEditor(false)
+            setFullscreenSession(null)
+          }}
+          content={fullscreenSession.notes}
+          onChange={(newContent) => {
+            if (onEditSession && fullscreenSession) {
+              onEditSession(fullscreenSession.id, newContent)
+              setFullscreenSession({
+                ...fullscreenSession,
+                notes: newContent
+              })
+            }
+          }}
+          topic={fullscreenSession.topic}
+          subtopic={fullscreenSession.subtopic}
+          settings={settings}
+          onSave={() => {
+            if (onEditSession && fullscreenSession) {
+              // Save handled by onChange, just show confirmation
+              toast.success('Notes updated successfully')
+            }
+          }}
+          autoSave={false} // Manual save for existing notes
         />
       )}
     </div>
