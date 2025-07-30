@@ -10,7 +10,7 @@ import { StreakTracker } from '@/components/StreakTracker'
 import { SessionNotes } from '@/components/SessionNotes'
 import { MobileNavigation } from '@/components/MobileNavigation'
 import { PageTitle } from '@/components/PageTitle'
-import { Clock, BookOpen, History, Settings as SettingsIcon, ChartBar, Flame } from '@phosphor-icons/react'
+import { Clock, BookOpen, ClockCounterClockwise, Gear, ChartBar, Flame } from '@phosphor-icons/react'
 import { Toaster } from '@/components/ui/sonner'
 import { toast } from 'sonner'
 
@@ -96,10 +96,40 @@ function App() {
   })
   const [achievements, setAchievements] = useKV<Achievement[]>('achievements', [])
 
-  const calculateStreak = (sessions: StudySession[]) => {
-    if (sessions.length === 0) return { currentStreak: 0, longestStreak: 0 }
+  // Ensure we have valid default values
+  const safeSettings = settings || {
+    defaultDuration: 25,
+    breakDuration: 5,
+    longBreakDuration: 15,
+    sessionsUntilLongBreak: 4,
+    autoStartBreaks: false,
+    audioNotifications: true,
+    distractionFreeMode: false,
+    aiSettings: {
+      enabled: false,
+      apiKey: '',
+      model: 'gemini-1.5-flash',
+      temperature: 0.7,
+      maxTokens: 4096
+    }
+  }
+  const safeSessions = sessions || []
+  const safeTopics = topics || []
+  const safeSubtopics = subtopics || {}
+  const safeStreakData = streakData || {
+    currentStreak: 0,
+    longestStreak: 0,
+    lastStudyDate: null,
+    totalRewards: 0,
+    weeklyGoal: 5,
+    weeklyProgress: 0
+  }
+  const safeAchievements = achievements || []
 
-    const sortedSessions = [...sessions].sort((a, b) => 
+  const calculateStreak = (sessionList: StudySession[]) => {
+    if (sessionList.length === 0) return { currentStreak: 0, longestStreak: 0 }
+
+    const sortedSessions = [...sessionList].sort((a, b) => 
       new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()
     )
 
@@ -169,9 +199,9 @@ function App() {
     return streaks
   }
 
-  const checkAchievements = (sessions: StudySession[], streakData: StreakData) => {
+  const checkAchievements = (sessionList: StudySession[], streakInfo: StreakData) => {
     const newAchievements: Achievement[] = []
-    const existingIds = achievements.map(a => a.id)
+    const existingIds = safeAchievements.map(a => a.id)
 
     const achievementTemplates = [
       { id: 'first-session', title: 'Getting Started', description: 'Complete your first study session', icon: '🎯', type: 'session', threshold: 1 },
@@ -191,17 +221,17 @@ function App() {
       
       switch (template.type) {
         case 'session':
-          shouldUnlock = sessions.length >= template.threshold
+          shouldUnlock = sessionList.length >= template.threshold
           break
         case 'streak':
-          shouldUnlock = streakData.currentStreak >= template.threshold || streakData.longestStreak >= template.threshold
+          shouldUnlock = streakInfo.currentStreak >= template.threshold || streakInfo.longestStreak >= template.threshold
           break
         case 'duration':
-          const totalMinutes = sessions.reduce((sum, s) => sum + s.duration, 0)
+          const totalMinutes = sessionList.reduce((sum, s) => sum + s.duration, 0)
           shouldUnlock = totalMinutes >= template.threshold
           break
         case 'topic':
-          const uniqueTopics = new Set(sessions.map(s => s.topic))
+          const uniqueTopics = new Set(sessionList.map(s => s.topic))
           shouldUnlock = uniqueTopics.size >= template.threshold
           break
       }
@@ -215,7 +245,7 @@ function App() {
     })
 
     if (newAchievements.length > 0) {
-      setAchievements(current => [...current, ...newAchievements])
+      setAchievements(current => [...(current || []), ...newAchievements])
       return newAchievements
     }
     return []
@@ -223,7 +253,8 @@ function App() {
 
   const addSession = (session: StudySession) => {
     setSessions(current => {
-      const updated = [...current, session]
+      const currentSessions = current || []
+      const updated = [...currentSessions, session]
       
       // Update streak data
       const streaks = calculateStreak(updated)
@@ -236,11 +267,11 @@ function App() {
       )
       
       const newStreakData = {
-        ...streakData,
+        ...safeStreakData,
         currentStreak: streaks.currentStreak,
         longestStreak: streaks.longestStreak,
         lastStudyDate: today,
-        weeklyProgress: Math.min(weekSessions.length, streakData.weeklyGoal)
+        weeklyProgress: Math.min(weekSessions.length, safeStreakData.weeklyGoal)
       }
       
       setStreakData(newStreakData)
@@ -249,8 +280,8 @@ function App() {
       const newAchievements = checkAchievements(updated, newStreakData)
       if (newAchievements.length > 0) {
         setStreakData(current => ({
-          ...current,
-          totalRewards: current.totalRewards + newAchievements.length
+          ...(current || safeStreakData),
+          totalRewards: (current?.totalRewards || 0) + newAchievements.length
         }))
         
         // Show achievement notifications
@@ -268,7 +299,7 @@ function App() {
 
   const editSession = (sessionId: string, updatedNotes: string) => {
     setSessions(current => 
-      current.map(session => 
+      (current || []).map(session => 
         session.id === sessionId 
           ? { ...session, notes: updatedNotes }
           : session
@@ -277,22 +308,23 @@ function App() {
   }
 
   const deleteSession = (sessionId: string) => {
-    setSessions(current => current.filter(s => s.id !== sessionId))
+    setSessions(current => (current || []).filter(s => s.id !== sessionId))
   }
 
   const updateTopics = (topic: string, subtopic: string) => {
     setTopics(current => {
-      if (!current.includes(topic)) {
-        return [...current, topic]
+      const currentTopics = current || []
+      if (!currentTopics.includes(topic)) {
+        return [...currentTopics, topic]
       }
-      return current
+      return currentTopics
     })
     
     setSubtopics(current => ({
-      ...current,
-      [topic]: current[topic]?.includes(subtopic) 
+      ...(current || {}),
+      [topic]: (current && current[topic]?.includes(subtopic)) 
         ? current[topic] 
-        : [...(current[topic] || []), subtopic]
+        : [...((current && current[topic]) || []), subtopic]
     }))
   }
 
@@ -319,7 +351,7 @@ function App() {
             onClick={() => setActiveTab('settings')}
             className="md:hidden"
           >
-            <SettingsIcon size={20} />
+            <Gear size={20} />
           </Button>
         </header>
 
@@ -343,11 +375,11 @@ function App() {
               Dashboard
             </TabsTrigger>
             <TabsTrigger value="history" className="flex items-center gap-2 font-ui">
-              <History size={18} />
+              <ClockCounterClockwise size={18} />
               History
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2 font-ui">
-              <SettingsIcon size={18} />
+              <Gear size={18} />
               Settings
             </TabsTrigger>
           </TabsList>
@@ -355,9 +387,9 @@ function App() {
           <TabsContent value="timer" className="space-y-6 mt-4 md:mt-6">
             <PageTitle title="Study Timer" description="Focus sessions with break management" />
             <StudyTimer
-              settings={settings}
-              topics={topics}
-              subtopics={subtopics}
+              settings={safeSettings}
+              topics={safeTopics}
+              subtopics={safeSubtopics}
               onSessionComplete={addSession}
               onTopicUpdate={updateTopics}
               onSwitchToNotes={() => setActiveTab('notes')}
@@ -367,8 +399,8 @@ function App() {
           <TabsContent value="notes" className="space-y-6 mt-4 md:mt-6">
             <PageTitle title="Session Notes" description="View and export your study notes" />
             <SessionNotes 
-              sessions={sessions} 
-              settings={settings}
+              sessions={safeSessions} 
+              settings={safeSettings}
               onEditSession={editSession}
               onDeleteSession={deleteSession}
             />
@@ -377,24 +409,24 @@ function App() {
           <TabsContent value="streaks" className="space-y-6 mt-4 md:mt-6">
             <PageTitle title="Study Streaks" description="Track your progress and achievements" />
             <StreakTracker
-              streakData={streakData}
-              achievements={achievements}
-              sessions={sessions}
+              streakData={safeStreakData}
+              achievements={safeAchievements}
+              sessions={safeSessions}
               onUpdateWeeklyGoal={(goal) => {
-                setStreakData(current => ({ ...current, weeklyGoal: goal }))
+                setStreakData(current => ({ ...(current || safeStreakData), weeklyGoal: goal }))
               }}
             />
           </TabsContent>
 
           <TabsContent value="dashboard" className="space-y-6 mt-4 md:mt-6">
             <PageTitle title="Analytics Dashboard" description="Detailed study statistics and trends" />
-            <Dashboard sessions={sessions} streakData={streakData} achievements={achievements} />
+            <Dashboard sessions={safeSessions} streakData={safeStreakData} achievements={safeAchievements} />
           </TabsContent>
 
           <TabsContent value="history" className="space-y-6 mt-4 md:mt-6">
             <PageTitle title="Session History" description="Review your past study sessions" />
             <SessionHistory 
-              sessions={sessions}
+              sessions={safeSessions}
               onDeleteSession={deleteSession}
             />
           </TabsContent>
@@ -402,10 +434,10 @@ function App() {
           <TabsContent value="settings" className="space-y-6 mt-4 md:mt-6">
             <PageTitle title="Settings" description="Customize your study experience" />
             <Settings
-              settings={settings}
+              settings={safeSettings}
               onSettingsChange={setSettings}
-              topics={topics}
-              subtopics={subtopics}
+              topics={safeTopics}
+              subtopics={safeSubtopics}
               onTopicsChange={setTopics}
               onSubtopicsChange={setSubtopics}
             />

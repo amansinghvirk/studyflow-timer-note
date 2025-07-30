@@ -13,6 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { RichTextEditor } from '@/components/RichTextEditor'
 import { FullscreenEditor } from '@/components/FullscreenEditor'
 import { AIInsightsPanel } from '@/components/AIInsightsPanel'
+import { CustomAIQuestion } from '@/components/CustomAIQuestion'
 import { 
   DownloadSimple, 
   FileText, 
@@ -28,7 +29,8 @@ import {
   FloppyDisk,
   X,
   Sparkle,
-  ArrowsOut
+  ArrowsOut,
+  QuestionMark
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import html2canvas from 'html2canvas'
@@ -79,6 +81,8 @@ export function SessionNotes({ sessions, settings, onEditSession, onDeleteSessio
   const [selectedSessionForAI, setSelectedSessionForAI] = useState<StudySession | null>(null)
   const [showFullscreenEditor, setShowFullscreenEditor] = useState(false)
   const [fullscreenSession, setFullscreenSession] = useState<StudySession | null>(null)
+  const [customQuestionOpen, setCustomQuestionOpen] = useState(false)
+  const [selectedSessionForQuestion, setSelectedSessionForQuestion] = useState<StudySession | null>(null)
 
   // Get unique topics and subtopics from sessions
   const { topics, subtopics } = useMemo(() => {
@@ -191,6 +195,11 @@ export function SessionNotes({ sessions, settings, onEditSession, onDeleteSessio
   const openAIInsights = (session: StudySession) => {
     setSelectedSessionForAI(session)
     setAiInsightsOpen(true)
+  }
+
+  const openCustomQuestion = (session: StudySession) => {
+    setSelectedSessionForQuestion(session)
+    setCustomQuestionOpen(true)
   }
 
   const sanitizeFilename = (filename: string): string => {
@@ -1038,6 +1047,25 @@ export function SessionNotes({ sessions, settings, onEditSession, onDeleteSessio
                       </TooltipProvider>
                     )}
 
+                    {/* Custom AI Question Button */}
+                    {settings?.aiSettings?.enabled && settings?.aiSettings?.apiKey && session.notes.trim() && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              onClick={() => openCustomQuestion(session)}
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700"
+                            >
+                              <QuestionMark size={14} />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Ask custom questions about this session</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+
                     {onEditSession && (
                       <TooltipProvider>
                         <Tooltip>
@@ -1369,6 +1397,21 @@ export function SessionNotes({ sessions, settings, onEditSession, onDeleteSessio
             }
           }}
           autoSave={false} // Manual save for existing notes
+        />
+      )}
+
+      {/* Custom AI Question Panel */}
+      {selectedSessionForQuestion && settings && (
+        <CustomAIQuestion
+          session={selectedSessionForQuestion}
+          settings={settings}
+          open={customQuestionOpen}
+          onOpenChange={(open) => {
+            setCustomQuestionOpen(open)
+            if (!open) {
+              setSelectedSessionForQuestion(null)
+            }
+          }}
         />
       )}
     </div>

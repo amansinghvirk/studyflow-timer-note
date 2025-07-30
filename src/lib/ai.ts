@@ -381,4 +381,31 @@ Provide analysis including:
       }
     }
   }
+
+  async answerCustomQuestion(session: StudySession, question: string): Promise<AIResponse> {
+    try {
+      const prompt = spark.llmPrompt`Based on these study notes, please answer the following question:
+
+**Question:** ${question}
+
+**Study Session Context:**
+**Topic:** ${session.topic}
+**Subtopic:** ${session.subtopic}
+**Session Date:** ${new Date(session.completedAt).toLocaleDateString()}
+**Duration:** ${session.duration} minutes
+
+**Notes:**
+${session.notes}
+
+Please provide a comprehensive answer based on the content of the notes. If the question cannot be fully answered from the notes alone, please indicate what information is available and suggest what additional research might be needed.`
+
+      const response = await spark.llm(prompt, 'gpt-4o-mini')
+      return { success: true, content: response }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to answer question' 
+      }
+    }
+  }
 }
