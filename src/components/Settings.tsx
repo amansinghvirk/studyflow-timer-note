@@ -154,21 +154,18 @@ export function Settings({
     
     try {
       // Test the AI connection with a simple prompt
-      const { StudyFlowAI } = await import('@/lib/ai')
-      const ai = new StudyFlowAI({
-        enabled: localSettings.aiSettings?.enabled || false,
-        apiKey: localSettings.aiSettings?.apiKey || '',
-        model: useCustomModel ? customModel : (localSettings.aiSettings?.model || 'gemini-1.5-flash'),
-        temperature: localSettings.aiSettings?.temperature || 0.7,
-        maxTokens: localSettings.aiSettings?.maxTokens || 4096
-      })
-
-      const testResponse = await ai.customPrompt('Say "Hello from StudyFlow AI!" if you can read this.')
+      const { testAIConnection: testConnection } = await import('@/lib/ai')
+      const modelId = useCustomModel ? 'custom' : (localSettings.aiSettings?.model || 'gemini-1.5-flash')
+      
+      const testResponse = await testConnection(
+        localSettings.aiSettings?.apiKey || '',
+        modelId
+      )
 
       if (testResponse.success) {
         toast.success('AI connection successful!')
       } else {
-        toast.error(`AI connection failed: ${testResponse.error}`)
+        toast.error(`AI connection failed: ${testResponse.message}`)
       }
     } catch (error) {
       toast.error('Failed to connect to AI service')

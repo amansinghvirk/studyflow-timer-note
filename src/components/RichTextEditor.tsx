@@ -28,7 +28,7 @@ import {
 } from '@phosphor-icons/react'
 import { useState, useCallback } from 'react'
 import { toast } from 'sonner'
-import { generateLiveNotesEnhancement } from '@/lib/ai'
+import { generateLiveSuggestions } from '@/lib/ai'
 import type { AppSettings } from '@/App'
 
 interface RichTextEditorProps {
@@ -145,7 +145,7 @@ export function RichTextEditor({
     setIsGeneratingAI(true)
     
     try {
-      const result = await generateLiveNotesEnhancement(
+      const result = await generateLiveSuggestions(
         content,
         topic,
         subtopic,

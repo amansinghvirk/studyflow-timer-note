@@ -1,22 +1,58 @@
 // AI model configurations and utilities
-export const AVAILABLE_MODELS = [
-    label: 'Gemini 1.5 Pro', 
-    provider: 'google' 
-  { id: 'gemini-1.0-pro', name: 'Gemini 1.0 Pro', provider: 'google' },
-    label: 'Gemini 1.5 Flash', 
-  { id: 'gpt-4o-mini', name: 'GPT-4o Mini', provider: 'openai' },
-  { 
-    label: 'Gemini 1.0 Pro', 
-    provid
 
-    label: 'GPT-4o', 
+export interface AIModel {
+  id: string
+  name: string
+  label: string
+  provider: 'google' | 'openai' | 'anthropic' | 'custom'
+}
 
-  { 
+export interface AISettings {
   apiKey: string
-    provider: 'openai' 
+  selectedModel: string
+  customModel?: string
   temperature: number
   maxTokens: number
 }
+
+export const AVAILABLE_MODELS: AIModel[] = [
+  { 
+    id: 'gemini-1.5-pro', 
+    name: 'Gemini 1.5 Pro', 
+    label: 'Gemini 1.5 Pro', 
+    provider: 'google' 
+  },
+  { 
+    id: 'gemini-1.5-flash', 
+    name: 'Gemini 1.5 Flash', 
+    label: 'Gemini 1.5 Flash', 
+    provider: 'google' 
+  },
+  { 
+    id: 'gemini-1.0-pro', 
+    name: 'Gemini 1.0 Pro', 
+    label: 'Gemini 1.0 Pro', 
+    provider: 'google' 
+  },
+  { 
+    id: 'gpt-4o', 
+    name: 'GPT-4o', 
+    label: 'GPT-4o', 
+    provider: 'openai' 
+  },
+  { 
+    id: 'gpt-4o-mini', 
+    name: 'GPT-4o Mini', 
+    label: 'GPT-4o Mini', 
+    provider: 'openai' 
+  },
+  { 
+    id: 'custom', 
+    name: 'Custom Model', 
+    label: 'Custom Model', 
+    provider: 'custom' 
+  }
+]
 
 export const DEFAULT_AI_SETTINGS: AISettings = {
   apiKey: '',
@@ -42,12 +78,14 @@ export function validateApiKey(apiKey: string, provider: string): boolean {
   switch (provider) {
     case 'google':
       return apiKey.startsWith('AIza') || apiKey.length > 30
-export function ge
+    case 'openai':
       return apiKey.startsWith('sk-') && apiKey.length > 40
     case 'anthropic':
       return apiKey.startsWith('sk-ant-') && apiKey.length > 40
-  return AVA
+    case 'custom':
       return apiKey.length > 10
+    default:
+      return false
   }
 }
 
@@ -56,7 +94,7 @@ export function generateInsightsPrompt(notes: string, topic: string, subtopic: s
   return `As an AI study assistant, analyze these study notes and provide helpful insights:
 
 **Topic**: ${topic}
-      return apiKey.lengt
+**Subtopic**: ${subtopic}
 
 **Notes**:
 ${notes}
@@ -74,7 +112,7 @@ Keep your response concise but actionable. Focus on enhancing learning and reten
 // Test AI connection
 export async function testAIConnection(apiKey: string, modelId: string): Promise<{ success: boolean; message: string }> {
   try {
-    const model = getModelByValue(model
+    const model = getModelById(modelId)
     if (!model) {
       return { success: false, message: 'Invalid model selected' }
     }
@@ -88,15 +126,14 @@ export async function testAIConnection(apiKey: string, modelId: string): Promise
     
     // Here you would implement the actual API call based on the provider
     // For now, we'll simulate a successful connection
-    }
     
     return { success: true, message: 'AI connection successful!' }
   } catch (error) {
-  private set
+    return { 
       success: false, 
       message: error instanceof Error ? error.message : 'Connection failed' 
     }
-  a
+  }
 }
 
 // Generate AI insights for study notes
@@ -104,13 +141,13 @@ export async function generateAIInsights(
   notes: string, 
   topic: string, 
   subtopic: string, 
-        return { succe
+  settings: AISettings
 ): Promise<{ success: boolean; insights?: string; error?: string }> {
-      /
+  try {
     const model = getModelById(settings.selectedModel)
-      
+    if (!model) {
       return { success: false, error: 'Invalid model selected' }
-     
+    }
 
     if (!validateApiKey(settings.apiKey, model.provider)) {
       return { success: false, error: 'Invalid API key' }
@@ -126,27 +163,60 @@ export async function generateAIInsights(
 
 ## Learning Gaps
 - Consider expanding on theoretical foundations
-    const model = getModelByV
+- Add more concrete examples
 
-    }
+## Connections
 - This topic relates to other areas in ${topic}
-      return { success: false, error: 'Invalid AP
+- Consider reviewing prerequisite concepts
 
-    const pro
+## Study Tips
 - Use active recall techniques
-    const sparkPrompt
 - Practice with real-world applications
 
 ## Practice Questions
-      success: false, 
+1. What are the key principles discussed in these notes?
 2. How does this concept apply in practical scenarios?
 3. What connections can you make with previous topics?`
 
     return { success: true, insights: mockInsights }
   } catch (error) {
-  topic: stri
+    return { 
       success: false, 
-): Promise<{ success: boolean; suggestions?: string; error?: string }> {
+      error: error instanceof Error ? error.message : 'Failed to generate insights' 
     }
-   
+  }
+}
+
+// Generate AI suggestions during live note-taking
+export async function generateLiveSuggestions(
+  currentNotes: string, 
+  topic: string, 
+  subtopic: string, 
+  settings: AISettings
+): Promise<{ success: boolean; suggestions?: string; error?: string }> {
+  try {
+    const model = getModelById(settings.selectedModel)
+    if (!model) {
+      return { success: false, error: 'Invalid model selected' }
+    }
+
+    if (!validateApiKey(settings.apiKey, model.provider)) {
+      return { success: false, error: 'Invalid API key' }
+    }
+
+    const sparkPrompt = spark.llmPrompt`Based on these study notes about ${topic} - ${subtopic}, provide 2-3 brief suggestions to improve or expand the content:
+
+${currentNotes}
+
+Keep suggestions concise and actionable.`
+
+    const suggestions = await spark.llm(sparkPrompt, 'gpt-4o-mini')
+    
+    return { success: true, suggestions }
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to generate suggestions' 
+    }
+  }
 }
