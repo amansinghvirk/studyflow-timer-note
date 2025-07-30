@@ -55,6 +55,12 @@ export interface AppSettings {
     type: string
     connectionString: string
   }
+  aiSettings?: {
+    apiKey: string
+    selectedModel: string
+    temperature: number
+    maxTokens: number
+  }
 }
 
 function App() {
@@ -67,7 +73,13 @@ function App() {
     sessionsUntilLongBreak: 4,
     autoStartBreaks: false,
     audioNotifications: true,
-    distractionFreeMode: false
+    distractionFreeMode: false,
+    aiSettings: {
+      apiKey: '',
+      selectedModel: 'gemini-1.5-flash',
+      temperature: 0.7,
+      maxTokens: 1000
+    }
   })
   const [topics, setTopics] = useKV<string[]>('study-topics', [])
   const [subtopics, setSubtopics] = useKV<Record<string, string[]>>('study-subtopics', {})
