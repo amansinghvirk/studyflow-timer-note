@@ -4,356 +4,215 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import { Progress } from '@/components/ui/progress'
-  id: string
-  description: string
-  enabled: boolean
 import { AppSettings } from '../App'
 
-  topic: string
-  settings: 
-  onClose: () =
-
-  isOpen,
+interface EnhancementStep {
+  id: string
+  title: string
+  description: string
   enabled: boolean
- 
+}
 
-  const [isEnhancing, setIsEnhan
-  const [currentS
-  const [enhanc
+interface AINotesEnhancerProps {
+  notes: string
   topic: string
-      description:
-      enabled: true
-    {
-      title: 'Rewrite
- 
+  settings: AppSettings
+  onClose: () => void
+  onEnhanced: (enhancedNotes: string) => void
+  isOpen: boolean
+}
 
-      id: 'insights',
-  isOpen,
-      en
+const enhancementSteps: EnhancementStep[] = [
+  {
+    id: 'summary',
+    title: 'Create Summary',
+    description: 'Generate a concise summary at the start of notes',
+    enabled: true
+  },
+  {
+    id: 'rewrite',
+    title: 'Rewrite Clearly',
+    description: 'Rewrite content clearly while keeping all major points',
+    enabled: true
+  },
+  {
+    id: 'insights',
+    title: 'Generate Key Insights',
+    description: 'Add key insights and takeaways at the end',
+    enabled: true
+  },
+  {
+    id: 'questions',
+    title: 'Questions & Answers',
+    description: 'Generate relevant questions and answers about the content',
+    enabled: true
+  },
+  {
+    id: 'visuals',
+    title: 'Add Visual Elements',
+    description: 'Suggest visual elements and formatting improvements',
+    enabled: true
+  }
+]
+
+export function AINotesEnhancer({
+  notes,
   topic,
-      title
-      icon:
-    },
-      id:
+  settings,
+  onClose,
+  onEnhanced,
+  isOpen
 }: AINotesEnhancerProps) {
   const [isEnhancing, setIsEnhancing] = useState(false)
+  const [currentStep, setCurrentStep] = useState(0)
+  const [enhancedContent, setEnhancedContent] = useState('')
   const [progress, setProgress] = useState(0)
-  const [currentStep, setCurrentStep] = useState('')
-  const [enhancedNotes, setEnhancedNotes] = useState('')
-  const [enhancementOptions, setEnhancementOptions] = useState<EnhancementOption[]>([
-    }
-    setIsEnhancing(t
-    setCurrentStep('Initializi
-    try {
-      if (enabledOptions.length ===
-        return
-      
-     
-      if (enabledOpt
-        setProgress(20)
-        const summaryPrompt = spark.llmPrompt`Summarize these study notes on
-${notes}
-Provide a 2-3 sente
-      
-     
-      }
-      // Step 2: Rewrite and
-        setCurrentStep('Rewriting and clarifying content...')
-        
 
-
-- Kee
-- Use clear, concise l
-- Maintain the original meanin
-        const rewritten = await spark.llm(rewritePrompt, settings.aiSetting
-          enhancementOutput += 
-          enhanceme
-      
-     
-      // Step 3: Gen
-        setCurrentStep('Generating
-        
-
-
-    }
-- Pr
-
-
-        if (insights) {
-        }
-
-      if
+  const enhanceNotes = async () => {
+    if (!settings.aiSettings?.enabled || !settings.aiSettings?.apiKey) {
+      toast.error('AI settings not configured. Please check your settings.')
       return
-     
+    }
 
-Generate 3-5 key questio
+    setIsEnhancing(true)
     setProgress(0)
-- Help with exam preparation
-Form
+    
     try {
-          enhancementOutput += `---\n\n## ❓ Key Questions & Answers\n\n${q
-      }
-      // Step 5: Add Visual Suggestions (if enabled)
-        setCur
-       
-
-
-- Diag
-- Mind maps for concept relationships
-- Color coding suggestions
-Format as practical visual suggestions with d
-        const visuals =
+      const enabledSteps = enhancementSteps.filter(step => step.enabled)
+      let result = notes
+      
+      for (let i = 0; i < enabledSteps.length; i++) {
+        const step = enabledSteps[i]
+        setCurrentStep(i)
+        setProgress(((i + 1) / enabledSteps.length) * 100)
         
-      }
-
-${notes}
-
-Provide a 2-3 sentence summary that captures the main concepts. Format it as a proper summary section.`
-
-      toast.error('Failed to enhance notes', {
-        if (summary) {
-          enhancementOutput += `## 📋 Summary\n\n${summary}\n\n---\n\n`
-        }
-      }
-
-      // Step 2: Rewrite and Clarify (if enabled)
-      if (enabledOptions.find(opt => opt.id === 'rewrite')) {
-        setCurrentStep('Rewriting and clarifying content...')
-        setProgress(40)
+        const prompt = spark.llmPrompt`
+          You are an expert academic note enhancer. Please enhance the following study notes for the topic "${topic}".
+          
+          Current notes:
+          ${result}
+          
+          Enhancement task: ${step.description}
+          
+          Please provide the enhanced version with the following requirements:
+          - Keep all original information and key points
+          - Improve clarity and organization
+          - ${step.id === 'summary' ? 'Add a clear summary at the beginning' : ''}
+          ${step.id === 'rewrite' ? 'Rewrite for better clarity and flow' : ''}
+          ${step.id === 'insights' ? 'Add key insights section at the end' : ''}
+          ${step.id === 'questions' ? 'Add Q&A section with relevant questions and answers' : ''}
+          ${step.id === 'visuals' ? 'Suggest visual elements using markdown formatting (tables, lists, emphasis)' : ''}
+          
+          Return only the enhanced notes content in markdown format.
+        `
         
-        const rewritePrompt = spark.llmPrompt`Rewrite these study notes on ${topic} - ${subtopic} for better clarity and organization while keeping ALL major points:
-
-${notes}
-
-Requirements:
-- Keep all important information and details
-- Improve structure and flow
-- Use clear, concise language
-- Add appropriate headings and bullet points
-- Maintain the original meaning and depth`
-
-
-        if (rewritten) {
-          enhancementOutput += `## 📝 Study Notes\n\n${rewritten}\n\n`
-        } else {
-          enhancementOutput += `## 📝 Study Notes\n\n${notes}\n\n`
-        }
-      } else {
-        enhancementOutput += `## 📝 Study Notes\n\n${notes}\n\n`
-      }
-
-      // Step 3: Generate Key Insights (if enabled)
-      if (enabledOptions.find(opt => opt.id === 'insights')) {
-        setCurrentStep('Generating key insights...')
-        setProgress(60)
-
-        const insightsPrompt = spark.llmPrompt`Analyze these study notes on ${topic} - ${subtopic} and provide key insights:
-
-${notes}
-
-Generate 3-5 key insights that:
-- Highlight the most important concepts
-- Explain connections between ideas
-- Provide deeper understanding
-- Suggest practical applications
-
-Format as a bulleted list with brief explanations.`
-
-          )}
-        if (insights) {
-          enhancementOutput += `---\n\n## 🧠 Key Insights\n\n${insights}\n\n`
+        try {
+          const response = await spark.llm(prompt, settings.aiSettings.model)
+          result = response
+          
+          // Add a small delay for better UX
+          await new Promise(resolve => setTimeout(resolve, 500))
+        } catch (error) {
+          console.error(`Error in step ${step.id}:`, error)
+          toast.error(`Failed to complete step: ${step.title}`)
+          break
         }
       }
-
-      // Step 4: Generate Q&A (if enabled)
-      if (enabledOptions.find(opt => opt.id === 'questions')) {
-        setCurrentStep('Creating questions and answers...')
-        setProgress(80)
-        
-        const qaPrompt = spark.llmPrompt`Based on these study notes on ${topic} - ${subtopic}, create important questions and their answers:
-
-${notes}
-
-Generate 3-5 key questions that:
-- Test understanding of main concepts
-- Explore practical applications
-- Encourage critical thinking
-- Help with exam preparation
-
-Format as Q&A pairs with clear, comprehensive answers.`
-
-
-        if (qa) {
-          enhancementOutput += `---\n\n## ❓ Key Questions & Answers\n\n${qa}\n\n`
-        }
-      }
-
-      // Step 5: Add Visual Suggestions (if enabled)
-      if (enabledOptions.find(opt => opt.id === 'visuals')) {
-        setCurrentStep('Adding visual suggestions...')
-        setProgress(95)
-        
-        const visualPrompt = spark.llmPrompt`Suggest visual elements for these study notes on ${topic} - ${subtopic}:
-
-${notes}
-
-Suggest:
-- Diagrams that would help illustrate concepts
-- Charts or graphs for data visualization
-- Mind maps for concept relationships
-- Visual metaphors or analogies
-- Color coding suggestions
-
-Format as practical visual suggestions with descriptions.`
-
-
-        if (visuals) {
-          enhancementOutput += `---\n\n## 🎨 Visual Enhancement Suggestions\n\n${visuals}\n\n`
-        }
-      }
-
+      
+      setEnhancedContent(result)
       setProgress(100)
-      setCurrentStep('Enhancement complete!')
-      setEnhancedNotes(enhancementOutput)
-
-      toast.success('Notes enhanced successfully!', {
-        description: 'Review the enhanced notes and save if satisfied'
-      })
-
+      toast.success('Notes enhanced successfully!')
+      
     } catch (error) {
-      console.error('Notes enhancement error:', error)
-      toast.error('Failed to enhance notes', {
-
-      })
+      console.error('Enhancement error:', error)
+      toast.error('Failed to enhance notes. Please try again.')
     } finally {
       setIsEnhancing(false)
-
-
-  }
-
-  const handleSave = () => {
-
-      onSave(enhancedNotes)
-
-      onSave(notes) // Save original notes if no enhancement
     }
-
-
-
-
-    setEnhancedNotes('')
-    setProgress(0)
-    setCurrentStep('')
-    onClose()
   }
 
-  const toggleOption = (optionId: string) => {
-    setEnhancementOptions(current =>
-      current.map(option =>
-
-          ? { ...option, enabled: !option.enabled }
-
-      )
-
+  const handleApplyEnhancements = () => {
+    if (enhancedContent) {
+      onEnhanced(enhancedContent)
+      onClose()
+      toast.success('Enhanced notes applied!')
+    }
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-
-            AI Notes Enhancement
-
+          <DialogTitle>AI Notes Enhancement</DialogTitle>
         </DialogHeader>
-
-        <div className="flex-1 flex flex-col gap-4 overflow-hidden">
-          {!enhancedNotes && !isEnhancing && (
+        
+        <div className="flex-1 space-y-4 overflow-hidden">
+          {!isEnhancing && !enhancedContent && (
             <div className="space-y-4">
-
-                <h3 className="font-medium mb-2">Enhancement Options</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {enhancementOptions.map((option) => (
-                    <div
-                      key={option.id}
-                      className="flex items-start space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50"
-                      onClick={() => toggleOption(option.id)}
-                    >
-                      <Checkbox
-                        checked={option.enabled}
-                        onCheckedChange={() => toggleOption(option.id)}
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          {option.icon}
-                          <span className="font-medium text-sm">{option.title}</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">{option.description}</p>
-                      </div>
-                    </div>
-                  ))}
-
-              </div>
-
-              <div className="flex justify-between">
-                <Button variant="outline" onClick={handleCancel}>
-                  Cancel
-
-                <Button 
-                  onClick={enhanceNotes}
-                  disabled={!enhancementOptions.some(opt => opt.enabled)}
-                  className="flex items-center gap-2"
-                >
-                  <Sparkles size={16} />
-                  Enhance Notes
-                </Button>
-              </div>
-
-          )}
-
-          {isEnhancing && (
-
-              <div className="text-center">
-                <Sparkles size={32} className="mx-auto mb-4 text-primary animate-pulse" />
-                <h3 className="font-medium mb-2">Enhancing your notes...</h3>
-                <p className="text-sm text-muted-foreground mb-4">{currentStep}</p>
-                <Progress value={progress} className="w-full max-w-md mx-auto" />
-
-            </div>
-
-
-          {enhancedNotes && !isEnhancing && (
-            <div className="flex-1 flex flex-col gap-4 overflow-hidden">
-              <div className="flex items-center justify-between">
-                <h3 className="font-medium">Enhanced Notes</h3>
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  <Sparkles size={12} />
-
-                </Badge>
-
+              <p className="text-muted-foreground">
+                AI will enhance your notes with the following improvements:
+              </p>
               
-              <ScrollArea className="flex-1 border rounded-lg p-4">
-                <div className="prose prose-sm max-w-none">
-                  <div dangerouslySetInnerHTML={{ 
-                    __html: enhancedNotes.replace(/\n/g, '<br />').replace(/## /g, '<h2>').replace(/### /g, '<h3>') 
-                  }} />
-                </div>
-
-
-              <div className="flex justify-between">
-                <Button variant="outline" onClick={handleCancel}>
-                  <X size={16} className="mr-2" />
+              <div className="grid gap-2">
+                {enhancementSteps.map((step) => (
+                  <div key={step.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                    <div className="w-2 h-2 bg-primary rounded-full" />
+                    <div>
+                      <div className="font-medium">{step.title}</div>
+                      <div className="text-sm text-muted-foreground">{step.description}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="flex gap-2 pt-4">
+                <Button onClick={enhanceNotes} className="flex-1">
+                  Enhance Notes with AI
+                </Button>
+                <Button variant="outline" onClick={onClose}>
                   Cancel
-
-                <Button onClick={handleSave} className="flex items-center gap-2">
-                  <Download size={16} />
-                  Save Enhanced Notes
                 </Button>
               </div>
-
+            </div>
           )}
-
+          
+          {isEnhancing && (
+            <div className="space-y-4">
+              <div className="text-center">
+                <h3 className="font-medium mb-2">Enhancing your notes...</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Step {currentStep + 1} of {enhancementSteps.length}: {enhancementSteps[currentStep]?.title}
+                </p>
+                <Progress value={progress} className="w-full" />
+              </div>
+            </div>
+          )}
+          
+          {enhancedContent && !isEnhancing && (
+            <div className="space-y-4 flex-1 overflow-hidden">
+              <div className="flex justify-between items-center">
+                <h3 className="font-medium">Enhanced Notes Preview</h3>
+                <div className="flex gap-2">
+                  <Button onClick={handleApplyEnhancements}>
+                    Apply Enhancements
+                  </Button>
+                  <Button variant="outline" onClick={onClose}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+              
+              <ScrollArea className="h-[400px] border rounded-lg p-4">
+                <div className="prose prose-sm max-w-none">
+                  <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">
+                    {enhancedContent}
+                  </pre>
+                </div>
+              </ScrollArea>
+            </div>
+          )}
+        </div>
       </DialogContent>
-
+    </Dialog>
   )
 }
