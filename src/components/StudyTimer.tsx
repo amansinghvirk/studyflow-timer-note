@@ -10,6 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Play, Pause, Square, SkipForward, Coffee, BookOpen, Eye, EyeSlash, Gear, ArrowsOut, ArrowsIn } from '@phosphor-icons/react'
 import { RichTextEditor } from '@/components/RichTextEditor'
 import { FullscreenEditor } from '@/components/FullscreenEditor'
+import { AINotesEnhancer } from '@/components/AINotesEnhancer'
 import { toast } from 'sonner'
 import type { StudySession, AppSettings } from '@/App'
 
@@ -48,6 +49,13 @@ export function StudyTimer({
   const [localDistractionFree, setLocalDistractionFree] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showFullscreenEditor, setShowFullscreenEditor] = useState(false)
+  const [showAIEnhancer, setShowAIEnhancer] = useState(false)
+  const [pendingSessionData, setPendingSessionData] = useState<{
+    topic: string
+    subtopic: string
+    duration: number
+    completedAt: Date
+  } | null>(null)
   
   const intervalRef = useRef<NodeJS.Timeout>()
   const startTimeRef = useRef<Date>()
@@ -202,8 +210,35 @@ export function StudyTimer({
     playNotificationSound(sessionType === 'study' ? 800 : 600)
 
     if (sessionType === 'study') {
-      // Auto-save notes when study session completes
-      if (startTimeRef.current && (selectedTopic && selectedSubtopic)) {
+      // Check if we should show AI enhancement dialog
+      if (startTimeRef.current && (selectedTopic && selectedSubtopic) && notes.trim() && 
+          settings?.aiSettings?.enabled && settings?.aiSettings?.apiKey) {
+        
+        const actualDuration = Math.round((totalTime - timeLeft) / 60)
+        
+        // Store session data for later saving
+        setPendingSessionData({
+          topic: selectedTopic,
+          subtopic: selectedSubtopic,
+          duration: actualDuration,
+          completedAt: new Date()
+        })
+        
+        // Exit fullscreen before showing AI enhancer
+        if (showFullscreenEditor) {
+          setShowFullscreenEditor(false)
+          setIsFullscreen(false)
+        }
+        
+        // Show AI enhancement dialog
+        setShowAIEnhancer(true)
+        
+        toast.success('Study session completed!', {
+          description: `You studied ${selectedTopic} - ${selectedSubtopic} for ${actualDuration} minutes. AI enhancement is available.`,
+          duration: 4000
+        })
+      } else if (startTimeRef.current && (selectedTopic && selectedSubtopic)) {
+        // Auto-save without AI enhancement
         const actualDuration = Math.round((totalTime - timeLeft) / 60)
         const session: StudySession = {
           id: Date.now().toString(),
@@ -293,39 +328,69 @@ export function StudyTimer({
   }
 
   const stopTimer = () => {
-    // Auto-save notes if there's content and proper session info
+    // Check if we should show AI enhancement dialog
     if (sessionType === 'study' && startTimeRef.current && 
-        selectedTopic && selectedSubtopic && (notes.trim() || timeLeft < totalTime)) {
-      const actualDuration = Math.max(1, Math.round((totalTime - timeLeft) / 60)) // Minimum 1 minute
-      const session: StudySession = {
-        id: Date.now().toString(),
+        selectedTopic && selectedSubtopic && notes.trim() && 
+        settings?.aiSettings?.enabled && settings?.aiSettings?.apiKey) {
+      
+      const actualDuration = Math.max(1, Math.round((totalTime - timeLeft) / 60))
+      
+      // Store session data for later saving
+      setPendingSessionData({
         topic: selectedTopic,
         subtopic: selectedSubtopic,
         duration: actualDuration,
-        completedAt: new Date(),
-        notes: notes || '' // Save empty string if no notes
-      }
-      
-      onSessionComplete(session)
-      toast.success('Session stopped and notes saved!', {
-        description: `Study time: ${actualDuration} minutes`
+        completedAt: new Date()
       })
-    }
-    
-    setTimerState('idle')
-    setTimeLeft(totalTime)
-    if (sessionType === 'study') {
-      setShowEditor(false)
-      setNotes('')
-      // Exit fullscreen when stopping timer
+      
+      // Exit fullscreen before showing AI enhancer
       if (showFullscreenEditor) {
         setShowFullscreenEditor(false)
         setIsFullscreen(false)
       }
-    }
-    
-    if (!selectedTopic || !selectedSubtopic) {
-      toast.info('Timer stopped')
+      
+      // Show AI enhancement dialog
+      setShowAIEnhancer(true)
+      
+      toast.info('Session stopped', {
+        description: 'AI enhancement is available for your notes'
+      })
+      
+    } else {
+      // Auto-save notes if there's content and proper session info
+      if (sessionType === 'study' && startTimeRef.current && 
+          selectedTopic && selectedSubtopic && (notes.trim() || timeLeft < totalTime)) {
+        const actualDuration = Math.max(1, Math.round((totalTime - timeLeft) / 60)) // Minimum 1 minute
+        const session: StudySession = {
+          id: Date.now().toString(),
+          topic: selectedTopic,
+          subtopic: selectedSubtopic,
+          duration: actualDuration,
+          completedAt: new Date(),
+          notes: notes || '' // Save empty string if no notes
+        }
+        
+        onSessionComplete(session)
+        toast.success('Session stopped and notes saved!', {
+          description: `Study time: ${actualDuration} minutes`
+        })
+      }
+      
+      setTimerState('idle')
+      setTimeLeft(totalTime)
+      if (sessionType === 'study') {
+        setShowEditor(false)
+        setNotes('')
+        // Exit fullscreen when stopping timer
+        if (showFullscreenEditor) {
+          setShowFullscreenEditor(false)
+          setIsFullscreen(false)
+        }
+      }
+      
+      if (!selectedTopic || !selectedSubtopic) {
+        toast.info('Timer stopped')
+      }
     }
   }
 
@@ -394,6 +459,37 @@ export function StudyTimer({
     setTotalTime(settings.defaultDuration * 60)
     setTimerState('idle')
     toast.success('Ready for your next study session!')
+  }
+
+  const handleAIEnhancedSave = (enhancedNotes: string) => {
+    if (pendingSessionData) {
+      const session: StudySession = {
+        id: Date.now().toString(),
+        topic: pendingSessionData.topic,
+        subtopic: pendingSessionData.subtopic,
+        duration: pendingSessionData.duration,
+        completedAt: pendingSessionData.completedAt,
+        notes: enhancedNotes
+      }
+      
+      onSessionComplete(session)
+      
+      // Reset state
+      setTimerState('idle')
+      setTimeLeft(totalTime)
+      setShowEditor(false)
+      setNotes('')
+      setPendingSessionData(null)
+      setShowAIEnhancer(false)
+      
+      toast.success('Enhanced notes saved successfully!', {
+        description: `Study session completed with AI enhancements`,
+        action: {
+          label: "Start Break",
+          onClick: () => switchToBreak()
+        }
+      })
+    }
   }
 
   const saveSession = () => {
@@ -977,6 +1073,22 @@ export function StudyTimer({
         }}
         autoSave={true}
       />
+
+      {/* AI Notes Enhancer Modal */}
+      {pendingSessionData && (
+        <AINotesEnhancer
+          isOpen={showAIEnhancer}
+          onClose={() => {
+            setShowAIEnhancer(false)
+            setPendingSessionData(null)
+          }}
+          notes={notes}
+          topic={pendingSessionData.topic}
+          subtopic={pendingSessionData.subtopic}
+          settings={settings}
+          onSave={handleAIEnhancedSave}
+        />
+      )}
     </div>
   )
 }

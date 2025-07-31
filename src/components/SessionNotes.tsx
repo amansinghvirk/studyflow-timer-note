@@ -1160,10 +1160,12 @@ export function SessionNotes({ sessions, settings, onEditSession, onDeleteSessio
               <CardContent>
                 {session.notes.trim() ? (
                   <div className="space-y-3">
-                    <div 
-                      className="prose prose-sm max-w-none font-ui text-foreground"
-                      dangerouslySetInnerHTML={{ __html: session.notes }}
-                    />
+                    <ScrollArea className="max-h-64 overflow-auto">
+                      <div 
+                        className="prose prose-sm max-w-none font-ui text-foreground pr-4"
+                        dangerouslySetInnerHTML={{ __html: session.notes }}
+                      />
+                    </ScrollArea>
                   </div>
                 ) : (
                   <div className="text-center py-6">
@@ -1181,25 +1183,31 @@ export function SessionNotes({ sessions, settings, onEditSession, onDeleteSessio
 
       {/* Edit Session Dialog */}
       <Dialog open={editingSession !== null} onOpenChange={(open) => !open && handleEditCancel()}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-          <DialogHeader>
+        <DialogContent className="max-w-5xl w-[90vw] max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle className="font-display">Edit Session Notes</DialogTitle>
             <DialogDescription className="font-ui">
               Update the notes for "{editingSession?.topic} - {editingSession?.subtopic}"
             </DialogDescription>
           </DialogHeader>
           
-          <div className="flex-1 overflow-hidden">
-            <RichTextEditor
-              content={editedNotes}
-              onChange={setEditedNotes}
-              placeholder="Update your notes here..."
-              editorHeight="400px"
-              className="h-full"
-            />
+          <div className="flex-1 overflow-hidden min-h-0">
+            <div className="h-full">
+              <RichTextEditor
+                content={editedNotes}
+                onChange={setEditedNotes}
+                placeholder="Update your notes here..."
+                editorHeight="calc(90vh - 200px)"
+                className="h-full"
+                showAIFeatures={true}
+                settings={settings}
+                topic={editingSession?.topic}
+                subtopic={editingSession?.subtopic}
+              />
+            </div>
           </div>
           
-          <DialogFooter>
+          <DialogFooter className="flex-shrink-0">
             <Button onClick={handleEditCancel} variant="outline" className="font-ui">
               <X size={16} className="mr-2" />
               Cancel
@@ -1396,7 +1404,7 @@ export function SessionNotes({ sessions, settings, onEditSession, onDeleteSessio
               toast.success('Notes updated successfully')
             }
           }}
-          autoSave={false} // Manual save for existing notes
+          autoSave={true} // Enable auto-save for editing existing notes
         />
       )}
 

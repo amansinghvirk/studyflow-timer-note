@@ -13,7 +13,8 @@ import {
   FloppyDisk,
   X,
   MagicWand,
-  Sparkle
+  Sparkle,
+  ArrowsOut
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import type { AppSettings } from '@/App'
@@ -52,7 +53,9 @@ export function FullscreenEditor({
   const [localContent, setLocalContent] = useState(content)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  const [isRealFullscreen, setIsRealFullscreen] = useState(false)
   const autoSaveRef = useRef<NodeJS.Timeout>()
+  const containerRef = useRef<HTMLDivElement>(null)
 
   // Auto-save functionality
   useEffect(() => {
@@ -103,10 +106,14 @@ export function FullscreenEditor({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (hasUnsavedChanges) {
-          handleSave()
+        if (isRealFullscreen) {
+          exitRealFullscreen()
+        } else {
+          if (hasUnsavedChanges) {
+            handleSave()
+          }
+          onClose()
         }
-        onClose()
       }
       
       // Ctrl+S or Cmd+S to save
@@ -114,13 +121,96 @@ export function FullscreenEditor({
         e.preventDefault()
         handleSave()
       }
+
+      // F11 for real fullscreen
+      if (e.key === 'F11') {
+        e.preventDefault()
+        toggleRealFullscreen()
+      }
     }
 
     if (isOpen) {
       document.addEventListener('keydown', handleKeyDown)
       return () => document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [isOpen, hasUnsavedChanges, handleSave, onClose])
+  }, [isOpen, hasUnsavedChanges, handleSave, onClose, isRealFullscreen])
+
+  // Handle real fullscreen mode
+  const toggleRealFullscreen = async () => {
+    if (!isRealFullscreen) {
+      await enterRealFullscreen()
+    } else {
+      await exitRealFullscreen()
+    }
+  }
+
+  const enterRealFullscreen = async () => {
+    try {
+      if (containerRef.current) {
+        if (containerRef.current.requestFullscreen) {
+          await containerRef.current.requestFullscreen()
+        } else if ((containerRef.current as any).webkitRequestFullscreen) {
+          await (containerRef.current as any).webkitRequestFullscreen()
+        } else if ((containerRef.current as any).mozRequestFullScreen) {
+          await (containerRef.current as any).mozRequestFullScreen()
+        } else if ((containerRef.current as any).msRequestFullscreen) {
+          await (containerRef.current as any).msRequestFullscreen()
+        }
+        setIsRealFullscreen(true)
+        toast.success('Fullscreen mode enabled', {
+          description: 'Press F11 or ESC to exit fullscreen'
+        })
+      }
+    } catch (error) {
+      console.error('Failed to enter fullscreen:', error)
+      toast.error('Could not enter fullscreen mode')
+    }
+  }
+
+  const exitRealFullscreen = async () => {
+    try {
+      if (document.fullscreenElement) {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen()
+        } else if ((document as any).webkitExitFullscreen) {
+          await (document as any).webkitExitFullscreen()
+        } else if ((document as any).mozCancelFullScreen) {
+          await (document as any).mozCancelFullScreen()
+        } else if ((document as any).msExitFullscreen) {
+          await (document as any).msExitFullscreen()
+        }
+      }
+      setIsRealFullscreen(false)
+      toast.info('Fullscreen mode disabled')
+    } catch (error) {
+      console.error('Failed to exit fullscreen:', error)
+    }
+  }
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+      )
+      setIsRealFullscreen(isCurrentlyFullscreen)
+    }
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange)
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange)
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange)
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange)
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange)
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange)
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange)
+    }
+  }, [])
 
   // Format time display
   const formatTime = (seconds: number) => {
@@ -147,7 +237,7 @@ export function FullscreenEditor({
       <DialogContent 
         className="w-screen h-screen max-w-none max-h-none m-0 p-0 border-0 rounded-none bg-background [&>button]:hidden"
       >
-        <div className="h-full flex flex-col">
+        <div ref={containerRef} className="h-full flex flex-col bg-background">
           {/* Top Bar */}
           <div className={`flex items-center justify-between p-4 bg-card border-b transition-all duration-300 ${showToolbar ? 'translate-y-0' : '-translate-y-full'}`}>
             <div className="flex items-center gap-4">
@@ -221,6 +311,24 @@ export function FullscreenEditor({
                   </TooltipTrigger>
                   <TooltipContent>
                     {showTimer ? 'Hide timer' : 'Show timer'}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              {/* Real Fullscreen Toggle */}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={toggleRealFullscreen}
+                    >
+                      {isRealFullscreen ? <ArrowsIn size={20} /> : <ArrowsOut size={20} />}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {isRealFullscreen ? 'Exit fullscreen (F11)' : 'Enter fullscreen (F11)'}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -323,7 +431,7 @@ export function FullscreenEditor({
               <RichTextEditor
                 content={localContent}
                 onChange={handleContentChange}
-                placeholder="Start writing your notes... Use ESC to exit fullscreen, or click the controls in the top-right corner."
+                placeholder="Start writing your notes... Use ESC to exit fullscreen, F11 for full browser fullscreen, or click the controls in the top-right corner."
                 className="h-full"
                 editorHeight="calc(100vh - 200px)"
                 showAIFeatures={true}
@@ -338,6 +446,7 @@ export function FullscreenEditor({
           <div className="absolute bottom-4 left-4 text-xs text-muted-foreground bg-background/80 backdrop-blur-sm rounded p-2">
             <div className="space-y-1">
               <div>ESC: Exit fullscreen</div>
+              <div>F11: Toggle browser fullscreen</div>
               <div>Ctrl+S: Save notes</div>
               {autoSave && <div>Auto-save: Enabled</div>}
             </div>
