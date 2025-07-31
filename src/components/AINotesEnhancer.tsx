@@ -1,19 +1,19 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Progress } from '@/components/ui/progress'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Sparkles, Wand2, Download, X } from '@phosphor-icons/react'
 import { toast } from 'sonner'
+import { AppSettings } from '../App'
 
+interface AINotesEnhancerProps {
   isOpen: boolean
+  onClose: () => void
   notes: string
-  subtopic: string
-  onSave: (enhancedNotes: string) => voi
-
-  id: string
-  description: st
-  enabled: boolean
-
-  isOpen, 
+  topic: string
   subtopic: string
   settings: AppSettings
   onSave: (enhancedNotes: string) => void
@@ -30,82 +30,70 @@ interface EnhancementOption {
 export function AINotesEnhancer({ 
   isOpen, 
   onClose, 
-      ena
+  notes, 
   topic, 
-      id: 'r
+  subtopic, 
   settings, 
-      ico
+  onSave 
 }: AINotesEnhancerProps) {
   const [isEnhancing, setIsEnhancing] = useState(false)
   const [progress, setProgress] = useState(0)
   const [currentStep, setCurrentStep] = useState('')
   const [enhancedNotes, setEnhancedNotes] = useState('')
   const [enhancementOptions, setEnhancementOptions] = useState<EnhancementOption[]>([
-     
-  }
-  const enhanceNotes = async (
-      toast.error('AI features not configured')
+    {
+      id: 'summary',
+      title: 'Create Summary',
+      description: 'Add a concise summary at the beginning',
+      icon: <Sparkles size={16} />,
+      enabled: true
+    },
+    {
+      id: 'rewrite',
+      title: 'Rewrite & Clarify',
+      description: 'Improve structure and clarity while keeping all points',
+      icon: <Wand2 size={16} />,
+      enabled: true
+    },
+    {
+      id: 'insights',
+      title: 'Key Insights',
+      description: 'Generate deeper insights and connections',
+      icon: <Sparkles size={16} />,
+      enabled: true
+    },
+    {
+      id: 'questions',
+      title: 'Q&A Section',
+      description: 'Create questions and answers for review',
+      icon: <Sparkles size={16} />,
+      enabled: true
+    },
+    {
+      id: 'visuals',
+      title: 'Visual Suggestions',
+      description: 'Suggest diagrams and visual elements',
+      icon: <Sparkles size={16} />,
+      enabled: false
     }
-    if (!notes.trim
-      
+  ])
 
+  const enhanceNotes = async () => {
+    if (!settings.aiSettings?.enabled || !settings.aiSettings?.apiKey) {
+      toast.error('AI features not configured')
+      return
+    }
+
+    if (!notes.trim()) {
+      toast.error('No notes to enhance')
+      return
+    }
+
+    setIsEnhancing(true)
     setProgress(0)
 
-      const enabledOptions = enhancementOptions.filter(option => opt
-      let enhancementOutput = ''
-      // Step 1: Cr
-      
-     
-
-
-
-        if (summary) {
-        }
-
-     
-        setProgress(40
-        const rewritePrompt
-${notes}
-Requirements:
-- Improve structure
-- Add 
-
-        if (rewritte
-        } else {
-        }
-        enhancementOutput += `## 📝 Study Notes\n\n${notes}\n\
-
-     
-    
-
-${notes}
-Generate 3-5 key insights that:
-- Explain connections bet
-- Suggest practical application
-Format as a bulleted list with brief explanations.`
-        const insi
-       
-     
-   
-
-        
-
-
-- Test under
-- Enc
-
-
-        if (qa) {
-        }
-
-
-        setProgress(95)
-        const visu
-${notes}
-
-- Charts 
-- Visual metaphors or analogies
-      let enhanced = notes
+    try {
+      const enabledOptions = enhancementOptions.filter(option => option.enabled)
       let enhancementOutput = ''
 
       // Step 1: Create Summary (if enabled)
@@ -122,14 +110,14 @@ Provide a 2-3 sentence summary that captures the main concepts. Format it as a p
         const summary = await spark.llm(summaryPrompt, 'gpt-4o-mini')
         if (summary) {
           enhancementOutput += `## 📋 Summary\n\n${summary}\n\n---\n\n`
-        d
+        }
       }
 
       // Step 2: Rewrite and Clarify (if enabled)
       if (enabledOptions.find(opt => opt.id === 'rewrite')) {
         setCurrentStep('Rewriting and clarifying content...')
         setProgress(40)
-      on
+        
         const rewritePrompt = spark.llmPrompt`Rewrite these study notes on ${topic} - ${subtopic} for better clarity and organization while keeping ALL major points:
 
 ${notes}
@@ -236,153 +224,134 @@ Format as practical visual suggestions with descriptions.`
       })
     } finally {
       setIsEnhancing(false)
-     
+    }
   }
 
   const handleSave = () => {
-              <Sparkle s
+    if (enhancedNotes) {
       onSave(enhancedNotes)
       toast.success('Enhanced notes saved!')
       onClose()
-            
+    } else {
       onSave(notes) // Save original notes if no enhancement
       onClose()
     }
-   
+  }
 
   const handleCancel = () => {
     setEnhancedNotes('')
-              Save
+    setProgress(0)
     setCurrentStep('')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    onClose()
+  }
+
+  const toggleOption = (optionId: string) => {
+    setEnhancementOptions(current =>
+      current.map(option =>
+        option.id === optionId
+          ? { ...option, enabled: !option.enabled }
+          : option
+      )
+    )
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Sparkles size={20} className="text-primary" />
+            AI Notes Enhancement
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="flex-1 flex flex-col gap-4 overflow-hidden">
+          {!enhancedNotes && !isEnhancing && (
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-medium mb-2">Enhancement Options</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {enhancementOptions.map((option) => (
+                    <div
+                      key={option.id}
+                      className="flex items-start space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50"
+                      onClick={() => toggleOption(option.id)}
+                    >
+                      <Checkbox
+                        checked={option.enabled}
+                        onCheckedChange={() => toggleOption(option.id)}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          {option.icon}
+                          <span className="font-medium text-sm">{option.title}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{option.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex justify-between">
+                <Button variant="outline" onClick={handleCancel}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={enhanceNotes}
+                  disabled={!enhancementOptions.some(opt => opt.enabled)}
+                  className="flex items-center gap-2"
+                >
+                  <Sparkles size={16} />
+                  Enhance Notes
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {isEnhancing && (
+            <div className="space-y-4 py-8">
+              <div className="text-center">
+                <Sparkles size={32} className="mx-auto mb-4 text-primary animate-pulse" />
+                <h3 className="font-medium mb-2">Enhancing your notes...</h3>
+                <p className="text-sm text-muted-foreground mb-4">{currentStep}</p>
+                <Progress value={progress} className="w-full max-w-md mx-auto" />
+              </div>
+            </div>
+          )}
+
+          {enhancedNotes && !isEnhancing && (
+            <div className="flex-1 flex flex-col gap-4 overflow-hidden">
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium">Enhanced Notes</h3>
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <Sparkles size={12} />
+                  AI Enhanced
+                </Badge>
+              </div>
+              
+              <ScrollArea className="flex-1 border rounded-lg p-4">
+                <div className="prose prose-sm max-w-none">
+                  <div dangerouslySetInnerHTML={{ 
+                    __html: enhancedNotes.replace(/\n/g, '<br />').replace(/## /g, '<h2>').replace(/### /g, '<h3>') 
+                  }} />
+                </div>
+              </ScrollArea>
+
+              <div className="flex justify-between">
+                <Button variant="outline" onClick={handleCancel}>
+                  <X size={16} className="mr-2" />
+                  Cancel
+                </Button>
+                <Button onClick={handleSave} className="flex items-center gap-2">
+                  <Download size={16} />
+                  Save Enhanced Notes
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
