@@ -33,9 +33,20 @@ import {
   QuestionMark
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
-import html2canvas from 'html2canvas'
-import jsPDF from 'jspdf'
 import type { StudySession, AppSettings } from '@/App'
+
+// Use dynamic imports to handle potential ES module issues
+let html2canvas: any
+let jsPDF: any
+
+const loadDependencies = async () => {
+  if (!html2canvas) {
+    html2canvas = (await import('html2canvas')).default
+  }
+  if (!jsPDF) {
+    jsPDF = (await import('jspdf')).default
+  }
+}
 
 // Type declarations for File System Access API
 declare global {
@@ -609,6 +620,9 @@ export function SessionNotes({ sessions, settings, onEditSession, onDeleteSessio
 
   const generatePDF = async (htmlContent: string, filename: string) => {
     try {
+      // Load dependencies dynamically
+      await loadDependencies()
+      
       // Create a temporary container to render the HTML properly
       const container = document.createElement('div')
       container.style.position = 'absolute'
