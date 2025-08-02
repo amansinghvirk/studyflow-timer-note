@@ -643,11 +643,6 @@ export function StudyTimer({
                 </div>
               </div>
             </CardHeader>
-                    {selectedTopic} - {selectedSubtopic}
-                  </p>
-                </div>
-              </div>
-            </CardHeader>
             <CardContent className="space-y-4">
               {/* Compact Timer Display */}
               <div className="text-center">
