@@ -329,22 +329,25 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto max-w-5xl px-3 py-2 md:p-6">
+    <div className="min-h-screen bg-background relative">
+      <div className="floating-particles"></div>
+      <div className="container mx-auto max-w-5xl px-3 py-2 md:p-6 relative z-10">
         <header className="mobile-header flex items-center justify-between py-2 md:py-10 mb-2 md:mb-6">
           <div className="flex items-center gap-2 md:gap-6 flex-1 min-w-0">
             <MobileNavigation activeTab={activeTab} onTabChange={setActiveTab} />
             <div className="text-left flex-1 min-w-0">
               <div className="flex items-center gap-2 md:gap-3">
-                <div className="w-8 h-8 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-primary via-accent to-purple-500 flex items-center justify-center shadow-lg flex-shrink-0 animate-pulse">
-                  <Clock size={16} className="text-white md:size-7" />
+                <div className="w-8 h-8 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-2xl flex-shrink-0 relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
+                  <Clock size={16} className="text-white md:size-7 relative z-10 drop-shadow-lg" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"></div>
                 </div>
                 <div className="min-w-0 flex-1">
                   <h1 className="font-display text-lg md:text-5xl font-bold mb-0 md:mb-1 truncate">
                     StudyFlow
                   </h1>
-                  <p className="text-muted-foreground font-ui text-xs md:text-lg hidden md:block font-medium">
-                    🚀 Ignite your learning journey with smart study sessions
+                  <p className="text-muted-foreground font-ui text-xs md:text-lg hidden md:block font-medium bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    🚀 Ignite your learning journey with smart study sessions ✨
                   </p>
                 </div>
               </div>
@@ -364,29 +367,29 @@ function App() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {/* Desktop tabs - hidden on mobile */}
-          <TabsList className="hidden md:grid w-full grid-cols-6 mb-8 modern-tabs p-1 bg-gradient-to-r from-white/70 via-blue-50/80 to-purple-50/70 backdrop-blur-xl border border-blue-200/30 shadow-lg">
-            <TabsTrigger value="timer" className="flex items-center gap-2 font-ui font-medium rounded-lg transition-all">
-              <Clock size={18} />
+          <TabsList className="hidden md:grid w-full grid-cols-6 mb-8 modern-tabs p-1.5 bg-gradient-to-r from-white/80 via-blue-50/90 to-purple-50/80 backdrop-blur-xl border-2 border-blue-200/40 shadow-2xl rounded-2xl">
+            <TabsTrigger value="timer" className="flex items-center gap-2 font-ui font-semibold rounded-xl transition-all duration-300 hover:scale-105">
+              <Clock size={18} className="drop-shadow-sm" />
               ⏰ Timer
             </TabsTrigger>
-            <TabsTrigger value="notes" className="flex items-center gap-2 font-ui font-medium rounded-lg transition-all">
-              <BookOpen size={18} />
+            <TabsTrigger value="notes" className="flex items-center gap-2 font-ui font-semibold rounded-xl transition-all duration-300 hover:scale-105">
+              <BookOpen size={18} className="drop-shadow-sm" />
               📝 Notes
             </TabsTrigger>
-            <TabsTrigger value="streaks" className="flex items-center gap-2 font-ui font-medium rounded-lg transition-all">
-              <Flame size={18} />
+            <TabsTrigger value="streaks" className="flex items-center gap-2 font-ui font-semibold rounded-xl transition-all duration-300 hover:scale-105">
+              <Flame size={18} className="drop-shadow-sm" />
               🔥 Streaks
             </TabsTrigger>
-            <TabsTrigger value="dashboard" className="flex items-center gap-2 font-ui font-medium rounded-lg transition-all">
-              <ChartBar size={18} />
+            <TabsTrigger value="dashboard" className="flex items-center gap-2 font-ui font-semibold rounded-xl transition-all duration-300 hover:scale-105">
+              <ChartBar size={18} className="drop-shadow-sm" />
               📊 Dashboard
             </TabsTrigger>
-            <TabsTrigger value="history" className="flex items-center gap-2 font-ui font-medium rounded-lg transition-all">
-              <ClockCounterClockwise size={18} />
+            <TabsTrigger value="history" className="flex items-center gap-2 font-ui font-semibold rounded-xl transition-all duration-300 hover:scale-105">
+              <ClockCounterClockwise size={18} className="drop-shadow-sm" />
               📚 History
             </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2 font-ui font-medium rounded-lg transition-all">
-              <Gear size={18} />
+            <TabsTrigger value="settings" className="flex items-center gap-2 font-ui font-semibold rounded-xl transition-all duration-300 hover:scale-105">
+              <Gear size={18} className="drop-shadow-sm" />
               ⚙️ Settings
             </TabsTrigger>
           </TabsList>
