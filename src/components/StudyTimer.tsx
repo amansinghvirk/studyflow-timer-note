@@ -617,10 +617,10 @@ export function StudyTimer({
 
   if (showSplitLayout) {
     return (
-      <div className="flex gap-6 h-[calc(100vh-200px)]">
-        {/* Left Timer Pane - Compact */}
-        <div className="w-80 flex-shrink-0">
-          <Card className="h-full">
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 h-auto lg:h-[calc(100vh-200px)]">
+        {/* Left Timer Pane - Compact on desktop, full width on mobile */}
+        <div className="w-full lg:w-80 lg:flex-shrink-0">
+          <Card className="h-auto lg:h-full">
             <CardHeader className="pb-4">
               <div className="text-center">
                 <CardTitle className="font-display text-lg mb-2">
@@ -637,7 +637,12 @@ export function StudyTimer({
                 </div>
                 <div className="text-center mb-3">
                   <p className="font-ui text-xs text-muted-foreground">Studying</p>
-                  <p className="font-display text-sm font-semibold text-foreground">
+                  <p className="font-display text-sm font-semibold text-foreground mobile-text-sm truncate">
+                    {selectedTopic} - {selectedSubtopic}
+                  </p>
+                </div>
+              </div>
+            </CardHeader>
                     {selectedTopic} - {selectedSubtopic}
                   </p>
                 </div>
@@ -769,14 +774,14 @@ export function StudyTimer({
           </Card>
         </div>
 
-        {/* Right Notes Pane - Expanded */}
-        <div className="flex-1 min-w-0">
-          <Card className="h-full flex flex-col">
+        {/* Right Notes Pane - Expanded on desktop, full width on mobile */}
+        <div className="flex-1 min-w-0 mt-4 lg:mt-0">
+          <Card className="h-auto lg:h-full flex flex-col">
             <CardHeader className="flex-shrink-0 pb-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="font-display text-xl">Session Notes</CardTitle>
-                  <p className="text-sm text-muted-foreground font-ui">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="font-display text-lg lg:text-xl">Session Notes</CardTitle>
+                  <p className="text-xs lg:text-sm text-muted-foreground font-ui truncate">
                     Take notes while you study • {selectedTopic} - {selectedSubtopic}
                   </p>
                 </div>
@@ -787,10 +792,10 @@ export function StudyTimer({
                         onClick={() => setShowFullscreenEditor(true)} 
                         variant="outline" 
                         size="sm"
-                        className="flex items-center gap-2 font-ui"
+                        className="flex items-center gap-2 font-ui mobile-form-element"
                       >
                         <ArrowsOut size={16} />
-                        Fullscreen
+                        <span className="hidden sm:inline">Fullscreen</span>
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>Open fullscreen note editor</TooltipContent>
@@ -852,11 +857,11 @@ export function StudyTimer({
           {/* Topic Selection */}
           {(timerState === 'idle' && sessionType === 'study') && (
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="topic" className="font-ui">Topic</Label>
+                  <Label htmlFor="topic" className="font-ui text-sm font-medium">Topic</Label>
                   <Select value={selectedTopic} onValueChange={setSelectedTopic}>
-                    <SelectTrigger>
+                    <SelectTrigger className="mobile-form-element">
                       <SelectValue placeholder="Select a topic" />
                     </SelectTrigger>
                     <SelectContent>
@@ -871,19 +876,19 @@ export function StudyTimer({
                       placeholder="Enter new topic"
                       value={newTopic}
                       onChange={(e) => setNewTopic(e.target.value)}
-                      className="mt-2"
+                      className="mt-2 mobile-form-element"
                     />
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="subtopic" className="font-ui">Subtopic</Label>
+                  <Label htmlFor="subtopic" className="font-ui text-sm font-medium">Subtopic</Label>
                   <Select 
                     value={selectedSubtopic} 
                     onValueChange={setSelectedSubtopic}
                     disabled={!selectedTopic}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="mobile-form-element">
                       <SelectValue placeholder="Select a subtopic" />
                     </SelectTrigger>
                     <SelectContent>
@@ -898,7 +903,7 @@ export function StudyTimer({
                       placeholder="Enter new subtopic"
                       value={newSubtopic}
                       onChange={(e) => setNewSubtopic(e.target.value)}
-                      className="mt-2"
+                      className="mt-2 mobile-form-element"
                     />
                   )}
                 </div>
@@ -908,10 +913,10 @@ export function StudyTimer({
 
           {/* Timer Display */}
           <div className="text-center space-y-4">
-            <div className="relative w-48 h-48 mx-auto">
-              <div className="absolute inset-0 rounded-full border-8 border-muted"></div>
+            <div className="relative w-32 h-32 md:w-48 md:h-48 mx-auto">
+              <div className="absolute inset-0 rounded-full border-4 md:border-8 border-muted"></div>
               <div 
-                className="absolute inset-0 rounded-full border-8 border-accent border-t-transparent transition-all duration-1000 ease-linear"
+                className="absolute inset-0 rounded-full border-4 md:border-8 border-accent border-t-transparent transition-all duration-1000 ease-linear"
                 style={{
                   transform: `rotate(${progressPercentage * 3.6}deg)`
                 }}
@@ -923,8 +928,8 @@ export function StudyTimer({
 
             {selectedTopic && selectedSubtopic && timerState !== 'idle' && sessionType === 'study' && (
               <div className="text-center">
-                <p className="font-ui text-sm text-muted-foreground">Studying</p>
-                <p className="font-display text-lg font-semibold text-foreground">
+                <p className="font-ui text-xs md:text-sm text-muted-foreground">Studying</p>
+                <p className="font-display text-base md:text-lg font-semibold text-foreground px-4">
                   {selectedTopic} - {selectedSubtopic}
                 </p>
               </div>

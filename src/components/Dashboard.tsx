@@ -325,68 +325,68 @@ export function Dashboard({ sessions, streakData, achievements }: DashboardProps
       </div>
 
       {/* Overview Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-display font-bold text-accent">{stats.totalSessions}</div>
-            <div className="text-sm text-muted-foreground font-ui">Sessions</div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
+        <Card className="mobile-card-content">
+          <CardContent className="p-3 md:p-4 text-center">
+            <div className="text-xl md:text-2xl font-display font-bold text-accent">{stats.totalSessions}</div>
+            <div className="text-xs md:text-sm text-muted-foreground font-ui">Sessions</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-display font-bold text-accent">{formatTime(stats.totalDuration)}</div>
-            <div className="text-sm text-muted-foreground font-ui">Total Time</div>
+        <Card className="mobile-card-content">
+          <CardContent className="p-3 md:p-4 text-center">
+            <div className="text-xl md:text-2xl font-display font-bold text-accent">{formatTime(stats.totalDuration)}</div>
+            <div className="text-xs md:text-sm text-muted-foreground font-ui">Total Time</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-display font-bold text-accent">{formatDuration(stats.averageDuration)}</div>
-            <div className="text-sm text-muted-foreground font-ui">Avg Session</div>
+        <Card className="mobile-card-content">
+          <CardContent className="p-3 md:p-4 text-center">
+            <div className="text-xl md:text-2xl font-display font-bold text-accent">{formatDuration(stats.averageDuration)}</div>
+            <div className="text-xs md:text-sm text-muted-foreground font-ui">Avg Session</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-display font-bold text-accent">{stats.dailyAverage}</div>
-            <div className="text-sm text-muted-foreground font-ui">Daily Sessions</div>
+        <Card className="mobile-card-content">
+          <CardContent className="p-3 md:p-4 text-center">
+            <div className="text-xl md:text-2xl font-display font-bold text-accent">{stats.dailyAverage}</div>
+            <div className="text-xs md:text-sm text-muted-foreground font-ui">Daily Sessions</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-display font-bold text-accent">{formatDuration(stats.avgDailyDuration)}</div>
-            <div className="text-sm text-muted-foreground font-ui">Daily Duration</div>
+        <Card className="mobile-card-content">
+          <CardContent className="p-3 md:p-4 text-center">
+            <div className="text-xl md:text-2xl font-display font-bold text-accent">{formatDuration(stats.avgDailyDuration)}</div>
+            <div className="text-xs md:text-sm text-muted-foreground font-ui">Daily Duration</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Streak and Achievement Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+        <Card className="mobile-card-content">
           <CardHeader className="flex flex-row items-center space-y-0 pb-2">
-            <Fire className="h-5 w-5 text-orange-500 mr-2" />
-            <CardTitle className="text-sm font-ui font-medium">Current Streak</CardTitle>
+            <Fire className="h-4 w-4 md:h-5 md:w-5 text-orange-500 mr-2" />
+            <CardTitle className="text-xs md:text-sm font-ui font-medium">Current Streak</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-display font-bold">{stats.streakInfo.currentStreak} days</div>
+            <div className="text-xl md:text-2xl font-display font-bold">{stats.streakInfo.currentStreak} days</div>
             <p className="text-xs text-muted-foreground font-ui">
               Keep it up!
             </p>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="mobile-card-content">
           <CardHeader className="flex flex-row items-center space-y-0 pb-2">
-            <Trophy className="h-5 w-5 text-yellow-500 mr-2" />
-            <CardTitle className="text-sm font-ui font-medium">Best Streak</CardTitle>
+            <Trophy className="h-4 w-4 md:h-5 md:w-5 text-yellow-500 mr-2" />
+            <CardTitle className="text-xs md:text-sm font-ui font-medium">Best Streak</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-display font-bold">{stats.streakInfo.longestStreak} days</div>
+            <div className="text-xl md:text-2xl font-display font-bold">{stats.streakInfo.longestStreak} days</div>
             <p className="text-xs text-muted-foreground font-ui">
               Personal record
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="mobile-card-content">
           <CardHeader className="flex flex-row items-center space-y-0 pb-2">
             <Trophy className="h-5 w-5 text-purple-500 mr-2" />
             <CardTitle className="text-sm font-ui font-medium">Achievements</CardTitle>

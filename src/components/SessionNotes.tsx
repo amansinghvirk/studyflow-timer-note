@@ -903,19 +903,19 @@ export function SessionNotes({ sessions, settings, onEditSession, onDeleteSessio
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <Card>
+      <Card className="mobile-card-content">
         <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="font-display text-2xl">Study Notes</CardTitle>
-              <p className="text-muted-foreground font-ui mt-1">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0">
+            <div className="min-w-0 flex-1">
+              <CardTitle className="font-display text-xl md:text-2xl">Study Notes</CardTitle>
+              <p className="text-muted-foreground font-ui mt-1 text-sm">
                 View and manage your study session notes
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="font-ui">
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Badge variant="outline" className="font-ui text-xs">
                 {filteredSessions.length} notes
               </Badge>
               {filteredSessions.length > 0 && (
@@ -925,11 +925,12 @@ export function SessionNotes({ sessions, settings, onEditSession, onDeleteSessio
                       <Button
                         variant="default"
                         size="sm"
-                        className="flex items-center gap-2 font-ui"
+                        className="flex items-center gap-2 font-ui mobile-form-element"
                         onClick={openDownloadAllDialog}
                       >
                         <FileArrowDown size={16} />
-                        Export All
+                        <span className="hidden sm:inline">Export All</span>
+                        <span className="sm:hidden">Export</span>
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>Export all filtered notes in different formats</TooltipContent>
@@ -942,14 +943,14 @@ export function SessionNotes({ sessions, settings, onEditSession, onDeleteSessio
         
         <CardContent className="space-y-4">
           {/* Search and Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4 md:gap-4">
             <div className="relative">
               <MagnifyingGlass className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
               <Input
                 placeholder="Search notes..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 font-ui"
+                className="pl-10 font-ui mobile-form-element"
               />
             </div>
             
@@ -957,7 +958,7 @@ export function SessionNotes({ sessions, settings, onEditSession, onDeleteSessio
               setSelectedTopic(value)
               setSelectedSubtopic('all') // Reset subtopic when topic changes
             }}>
-              <SelectTrigger>
+              <SelectTrigger className="mobile-form-element">
                 <SelectValue placeholder="All topics" />
               </SelectTrigger>
               <SelectContent>
@@ -973,7 +974,7 @@ export function SessionNotes({ sessions, settings, onEditSession, onDeleteSessio
               onValueChange={setSelectedSubtopic}
               disabled={selectedTopic === 'all'}
             >
-              <SelectTrigger>
+              <SelectTrigger className="mobile-form-element">
                 <SelectValue placeholder="All subtopics" />
               </SelectTrigger>
               <SelectContent>
@@ -1000,13 +1001,13 @@ export function SessionNotes({ sessions, settings, onEditSession, onDeleteSessio
 
       {/* Notes List */}
       {filteredSessions.length === 0 ? (
-        <Card>
+        <Card className="mobile-card-content">
           <CardContent className="py-12 text-center">
-            <FileText size={48} className="mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-display font-semibold mb-2">
+            <FileText size={36} className="mx-auto mb-4 text-muted-foreground md:size-12" />
+            <h3 className="text-base md:text-lg font-display font-semibold mb-2">
               {sessions.length === 0 ? 'No notes yet' : 'No notes found'}
             </h3>
-            <p className="text-muted-foreground font-ui">
+            <p className="text-sm text-muted-foreground font-ui">
               {sessions.length === 0 
                 ? 'Complete study sessions with notes to see them here'
                 : 'Try adjusting your search or filters'
@@ -1015,33 +1016,33 @@ export function SessionNotes({ sessions, settings, onEditSession, onDeleteSessio
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-3 md:gap-4">
           {filteredSessions.map(session => (
-            <Card key={session.id} className="hover:shadow-md transition-shadow">
+            <Card key={session.id} className="hover:shadow-md transition-shadow mobile-card-content">
               <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-display text-lg font-semibold">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-0">
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                      <h3 className="font-display text-base md:text-lg font-semibold truncate">
                         {session.topic}
                       </h3>
-                      <Badge variant="secondary" className="font-ui text-xs">
+                      <Badge variant="secondary" className="font-ui text-xs w-fit">
                         {session.subtopic}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground font-ui">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs md:text-sm text-muted-foreground font-ui">
                       <div className="flex items-center gap-1">
-                        <Calendar size={14} />
+                        <Calendar size={12} className="md:size-4" />
                         {formatDate(session.completedAt)}
                       </div>
                       <div className="flex items-center gap-1">
-                        <Clock size={14} />
+                        <Clock size={12} className="md:size-4" />
                         {formatDuration(session.duration)}
                       </div>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 self-start">
                     {/* AI Insights Button */}
                     {settings?.aiSettings?.enabled && settings?.aiSettings?.apiKey && session.notes.trim() && (
                       <TooltipProvider>

@@ -330,17 +330,17 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto max-w-5xl p-3 md:p-6">
-        <header className="flex items-center justify-between py-4 md:py-10 mb-2 md:mb-6">
-          <div className="flex items-center gap-4 md:gap-6">
+      <div className="container mx-auto max-w-5xl px-3 py-2 md:p-6">
+        <header className="mobile-header flex items-center justify-between py-2 md:py-10 mb-2 md:mb-6">
+          <div className="flex items-center gap-2 md:gap-6 flex-1 min-w-0">
             <MobileNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-            <div className="text-center md:text-left">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
-                  <Clock size={20} className="text-white md:size-7" />
+            <div className="text-left flex-1 min-w-0">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="w-8 h-8 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg flex-shrink-0">
+                  <Clock size={16} className="text-white md:size-7" />
                 </div>
-                <div>
-                  <h1 className="font-display text-xl md:text-5xl font-bold mb-0 md:mb-1">
+                <div className="min-w-0 flex-1">
+                  <h1 className="font-display text-lg md:text-5xl font-bold mb-0 md:mb-1 truncate">
                     StudyFlow
                   </h1>
                   <p className="text-muted-foreground font-ui text-xs md:text-lg hidden md:block font-medium">
@@ -356,9 +356,9 @@ function App() {
             variant={activeTab === 'settings' ? 'default' : 'outline'}
             size="icon"
             onClick={() => setActiveTab('settings')}
-            className="md:hidden enhanced-card"
+            className="md:hidden mobile-nav-trigger flex-shrink-0"
           >
-            <Gear size={20} />
+            <Gear size={18} />
           </Button>
         </header>
 
@@ -391,8 +391,8 @@ function App() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="timer" className="space-y-6 mt-4 md:mt-8">
-            <div className="enhanced-card p-6 md:p-8">
+          <TabsContent value="timer" className="space-y-4 md:space-y-6 mt-2 md:mt-8">
+            <div className="enhanced-card mobile-card-content">
               <PageTitle title="Study Timer" description="Focus sessions with break management" />
               <StudyTimer
                 settings={safeSettings}
@@ -405,8 +405,8 @@ function App() {
             </div>
           </TabsContent>
 
-          <TabsContent value="notes" className="space-y-6 mt-4 md:mt-8">
-            <div className="enhanced-card p-6 md:p-8">
+          <TabsContent value="notes" className="space-y-4 md:space-y-6 mt-2 md:mt-8">
+            <div className="enhanced-card mobile-card-content">
               <PageTitle title="Session Notes" description="View and export your study notes" />
               <SessionNotes 
                 sessions={safeSessions} 
@@ -417,8 +417,8 @@ function App() {
             </div>
           </TabsContent>
 
-          <TabsContent value="streaks" className="space-y-6 mt-4 md:mt-8">
-            <div className="enhanced-card p-6 md:p-8">
+          <TabsContent value="streaks" className="space-y-4 md:space-y-6 mt-2 md:mt-8">
+            <div className="enhanced-card mobile-card-content">
               <PageTitle title="Study Streaks" description="Track your progress and achievements" />
               <StreakTracker
                 streakData={safeStreakData}
@@ -431,15 +431,15 @@ function App() {
             </div>
           </TabsContent>
 
-          <TabsContent value="dashboard" className="space-y-6 mt-4 md:mt-8">
-            <div className="enhanced-card p-6 md:p-8">
+          <TabsContent value="dashboard" className="space-y-4 md:space-y-6 mt-2 md:mt-8">
+            <div className="enhanced-card mobile-card-content">
               <PageTitle title="Analytics Dashboard" description="Detailed study statistics and trends" />
               <Dashboard sessions={safeSessions} streakData={safeStreakData} achievements={safeAchievements} />
             </div>
           </TabsContent>
 
-          <TabsContent value="history" className="space-y-6 mt-4 md:mt-8">
-            <div className="enhanced-card p-6 md:p-8">
+          <TabsContent value="history" className="space-y-4 md:space-y-6 mt-2 md:mt-8">
+            <div className="enhanced-card mobile-card-content">
               <PageTitle title="Session History" description="Review your past study sessions" />
               <SessionHistory 
                 sessions={safeSessions}
@@ -448,8 +448,8 @@ function App() {
             </div>
           </TabsContent>
 
-          <TabsContent value="settings" className="space-y-6 mt-4 md:mt-8">
-            <div className="enhanced-card p-6 md:p-8">
+          <TabsContent value="settings" className="space-y-4 md:space-y-6 mt-2 md:mt-8">
+            <div className="enhanced-card mobile-card-content">
               <PageTitle title="Settings" description="Customize your study experience" />
               <Settings
                 settings={safeSettings}
