@@ -18,4 +18,4 @@ export const PageTitle = memo(function PageTitle({ title, description }: PageTit
       )}
     </div>
   )
-}
+})
