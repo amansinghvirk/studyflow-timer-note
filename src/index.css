@@ -5,58 +5,58 @@
 }
 
 :root {
-  /* Study-focused theme: warm amber backgrounds with deep forest green accents */
-  --background: oklch(0.97 0.02 85);
-  --foreground: oklch(0.20 0.03 180);
+  /* Motivating Learning Theme: Vibrant blues with energizing oranges and calming purples */
+  --background: oklch(0.98 0.02 240);
+  --foreground: oklch(0.15 0.05 260);
 
-  --card: oklch(0.99 0.005 80);
-  --card-foreground: oklch(0.20 0.03 180);
-  --popover: oklch(0.99 0.005 80);
-  --popover-foreground: oklch(0.20 0.03 180);
+  --card: oklch(0.99 0.01 250);
+  --card-foreground: oklch(0.15 0.05 260);
+  --popover: oklch(0.99 0.01 250);
+  --popover-foreground: oklch(0.15 0.05 260);
 
-  /* Deep forest green for primary actions - represents growth and focus */
-  --primary: oklch(0.45 0.12 160);
-  --primary-foreground: oklch(0.98 0.005 80);
-  /* Warm sage green for secondary elements */
-  --secondary: oklch(0.92 0.02 140);
-  --secondary-foreground: oklch(0.35 0.08 160);
-  /* Soft warm beige for muted elements */
-  --muted: oklch(0.94 0.015 70);
-  --muted-foreground: oklch(0.50 0.04 150);
-  /* Golden amber for accents - represents enlightenment and achievement */
-  --accent: oklch(0.70 0.15 80);
-  --accent-foreground: oklch(0.20 0.03 180);
-  --destructive: oklch(0.58 0.22 25);
-  --destructive-foreground: oklch(0.98 0.005 80);
+  /* Inspiring blue for primary actions - represents knowledge and trust */
+  --primary: oklch(0.55 0.20 250);
+  --primary-foreground: oklch(0.98 0.01 250);
+  /* Energizing light blue for secondary elements */
+  --secondary: oklch(0.90 0.05 240);
+  --secondary-foreground: oklch(0.40 0.15 250);
+  /* Soft lavender for muted elements */
+  --muted: oklch(0.95 0.03 270);
+  --muted-foreground: oklch(0.55 0.08 260);
+  /* Vibrant orange for accents - represents energy and achievement */
+  --accent: oklch(0.68 0.20 50);
+  --accent-foreground: oklch(0.98 0.01 250);
+  --destructive: oklch(0.60 0.25 15);
+  --destructive-foreground: oklch(0.98 0.01 250);
 
-  --border: oklch(0.90 0.02 120);
-  --input: oklch(0.90 0.02 120);
-  --ring: oklch(0.45 0.12 160);
+  --border: oklch(0.88 0.04 250);
+  --input: oklch(0.88 0.04 250);
+  --ring: oklch(0.55 0.20 250);
 
   --radius: 0.75rem;
 
-  /* Study-themed chart colors */
-  --chart-1: oklch(0.45 0.12 160); /* Deep forest green */
-  --chart-2: oklch(0.70 0.15 80);  /* Golden amber */
-  --chart-3: oklch(0.55 0.10 140); /* Sage green */
-  --chart-4: oklch(0.65 0.12 40);  /* Warm terracotta */
-  --chart-5: oklch(0.60 0.08 200); /* Muted teal */
+  /* Motivational chart colors */
+  --chart-1: oklch(0.55 0.20 250); /* Inspiring blue */
+  --chart-2: oklch(0.68 0.20 50);  /* Energizing orange */
+  --chart-3: oklch(0.65 0.18 300); /* Royal purple */
+  --chart-4: oklch(0.62 0.22 180); /* Fresh green */
+  --chart-5: oklch(0.60 0.16 320); /* Motivating magenta */
 
-  --sidebar: oklch(0.94 0.015 70);
-  --sidebar-foreground: oklch(0.20 0.03 180);
-  --sidebar-primary: oklch(0.45 0.12 160);
-  --sidebar-primary-foreground: oklch(0.98 0.005 80);
-  --sidebar-accent: oklch(0.92 0.02 140);
-  --sidebar-accent-foreground: oklch(0.35 0.08 160);
-  --sidebar-border: oklch(0.90 0.02 120);
-  --sidebar-ring: oklch(0.45 0.12 160);
+  --sidebar: oklch(0.95 0.03 270);
+  --sidebar-foreground: oklch(0.15 0.05 260);
+  --sidebar-primary: oklch(0.55 0.20 250);
+  --sidebar-primary-foreground: oklch(0.98 0.01 250);
+  --sidebar-accent: oklch(0.90 0.05 240);
+  --sidebar-accent-foreground: oklch(0.40 0.15 250);
+  --sidebar-border: oklch(0.88 0.04 250);
+  --sidebar-ring: oklch(0.55 0.20 250);
 
-  --shadow-color: oklch(0.45 0.12 160);
-  --shadow-opacity: 0.08;
-  --shadow-blur: 24px;
+  --shadow-color: oklch(0.55 0.20 250);
+  --shadow-opacity: 0.12;
+  --shadow-blur: 28px;
   --shadow-spread: 0px;
   --shadow-offset-x: 0px;
-  --shadow-offset-y: 4px;
+  --shadow-offset-y: 6px;
 
   --font-sans: "Poppins";
 
@@ -102,12 +102,13 @@
   body {
     @apply bg-background text-foreground font-body;
     font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-    background: linear-gradient(135deg, var(--background) 0%, oklch(0.95 0.025 100) 100%);
+    background: linear-gradient(135deg, var(--background) 0%, oklch(0.96 0.05 260) 50%, oklch(0.94 0.08 280) 100%);
+    min-height: 100vh;
   }
   
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
-    background: linear-gradient(135deg, var(--foreground) 0%, oklch(0.35 0.08 160) 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 50%, oklch(0.65 0.18 300) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -135,42 +136,60 @@
     text-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
 
-  /* Enhanced card styling */
+  /* Enhanced card styling with motivational theme */
   .enhanced-card {
-    background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.8) 100%);
+    background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,255,0.9) 50%, rgba(245,247,255,0.85) 100%);
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(99,102,241,0.15);
     box-shadow: 
-      0 8px 32px rgba(0,0,0,0.08),
-      0 2px 8px rgba(0,0,0,0.04),
-      inset 0 1px 0 rgba(255,255,255,0.4);
+      0 8px 32px rgba(99,102,241,0.12),
+      0 2px 8px rgba(251,146,60,0.08),
+      inset 0 1px 0 rgba(255,255,255,0.5);
     border-radius: var(--radius);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .enhanced-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-4px);
     box-shadow: 
-      0 16px 48px rgba(0,0,0,0.12),
-      0 4px 16px rgba(0,0,0,0.06),
-      inset 0 1px 0 rgba(255,255,255,0.5);
+      0 20px 48px rgba(99,102,241,0.18),
+      0 4px 16px rgba(251,146,60,0.12),
+      inset 0 1px 0 rgba(255,255,255,0.6);
+    border-color: rgba(99,102,241,0.25);
   }
 
-  /* Premium button styling with study theme */
+  /* Premium button styling with motivational energy */
   .premium-button {
     background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
     box-shadow: 
-      0 4px 16px rgba(76, 153, 102, 0.3),
-      0 2px 8px rgba(76, 153, 102, 0.15);
+      0 6px 20px rgba(99,102,241,0.35),
+      0 2px 8px rgba(251,146,60,0.25);
     border: none;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .premium-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.6s ease;
+  }
+
+  .premium-button:hover::before {
+    left: 100%;
   }
 
   .premium-button:hover {
-    transform: translateY(-1px);
+    transform: translateY(-2px);
     box-shadow: 
-      0 8px 24px rgba(76, 153, 102, 0.4),
-      0 4px 12px rgba(76, 153, 102, 0.2);
+      0 12px 32px rgba(99,102,241,0.45),
+      0 4px 16px rgba(251,146,60,0.35);
   }
 
   .premium-button:active {
@@ -202,9 +221,11 @@
     }
 
     .enhanced-card {
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(15px);
       padding: 1rem !important;
       margin: 0.5rem 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,255,0.9) 100%);
+      border: 1px solid rgba(99,102,241,0.15);
     }
 
     /* Mobile container adjustments */
@@ -213,12 +234,12 @@
       padding-right: 0.75rem;
     }
 
-    /* Mobile navigation improvements */
+    /* Mobile navigation improvements with motivational styling */
     .mobile-nav-trigger {
-      background: rgba(255,255,255,0.9);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255,255,255,0.3);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(99,102,241,0.2);
+      box-shadow: 0 4px 12px rgba(99,102,241,0.15);
     }
 
     /* Mobile header adjustments */
@@ -394,6 +415,8 @@
     .enhanced-card {
       padding: 0.75rem !important;
       margin: 0.25rem 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,255,0.9) 100%);
+      border: 1px solid rgba(99,102,241,0.15);
     }
 
     .container {
@@ -415,20 +438,20 @@
     }
   }
 
-  /* Settings tabs enhancements */
+  /* Settings tabs enhancements with motivational styling */
   .settings-tabs {
-    background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(10px);
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(248,250,255,0.15) 100%);
+    backdrop-filter: blur(15px);
     border-radius: var(--radius);
     padding: 0.25rem;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(99,102,241,0.15);
   }
 
   .settings-tabs [data-state="active"] {
     position: relative;
     background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
     color: white;
-    box-shadow: 0 2px 8px rgba(76, 153, 102, 0.3);
+    box-shadow: 0 4px 12px rgba(99,102,241,0.4);
   }
   
   .settings-tabs [data-state="active"]::before {
@@ -439,69 +462,71 @@
     transform: translateX(-50%);
     width: 60%;
     height: 2px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent);
     border-radius: 1px;
   }
 
-  /* Smooth animations for settings */
+  /* Smooth animations for settings with energy */
   .settings-card {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%);
+    background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,255,0.8) 100%);
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(255,255,255,0.2);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    border: 1px solid rgba(99,102,241,0.15);
+    box-shadow: 0 4px 16px rgba(99,102,241,0.08);
   }
 
   .settings-card:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-    border-color: rgba(76, 153, 102, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(99,102,241,0.15);
+    border-color: rgba(99,102,241,0.25);
   }
 
-  /* Tab styling improvements */
+  /* Tab styling improvements with motivational colors */
   .modern-tabs [data-state="active"] {
     background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
     color: white;
-    box-shadow: 0 2px 8px rgba(76, 153, 102, 0.3);
+    box-shadow: 0 4px 12px rgba(99,102,241,0.4);
     border: none;
   }
 
   .modern-tabs [data-state="inactive"] {
-    background: rgba(255,255,255,0.6);
+    background: rgba(255,255,255,0.7);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.3);
+    border: 1px solid rgba(99,102,241,0.15);
     transition: all 0.2s ease;
   }
 
   .modern-tabs [data-state="inactive"]:hover {
-    background: rgba(255,255,255,0.8);
-    border-color: rgba(76, 153, 102, 0.2);
+    background: rgba(255,255,255,0.9);
+    border-color: rgba(99,102,241,0.25);
+    transform: translateY(-1px);
   }
 
-  /* Status indicators */
+  /* Status indicators with motivational energy */
   .status-active {
-    background: linear-gradient(135deg, oklch(0.65 0.15 140) 0%, oklch(0.55 0.18 160) 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, oklch(0.65 0.18 300) 100%);
     color: white;
-    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+    box-shadow: 0 4px 12px rgba(99,102,241,0.4);
   }
 
   .status-break {
-    background: linear-gradient(135deg, oklch(0.70 0.15 60) 0%, oklch(0.65 0.18 40) 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, oklch(0.75 0.20 30) 100%);
     color: white;
-    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+    box-shadow: 0 4px 12px rgba(251,146,60,0.4);
   }
 
-  /* Enhanced input styling */
+  /* Enhanced input styling with motivational theme */
   input, textarea, select {
-    background: rgba(255,255,255,0.8);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.3);
-    transition: all 0.2s ease;
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(99,102,241,0.2);
+    transition: all 0.3s ease;
   }
 
   input:focus, textarea:focus, select:focus {
-    background: rgba(255,255,255,0.95);
+    background: rgba(255,255,255,0.98);
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(76, 153, 102, 0.1);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+    transform: translateY(-1px);
   }
 }

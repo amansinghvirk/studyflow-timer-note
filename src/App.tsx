@@ -287,7 +287,7 @@ function App() {
         // Show achievement notifications
         newAchievements.forEach(achievement => {
           toast.success(`🎉 Achievement Unlocked: ${achievement.title}`, {
-            description: achievement.description,
+            description: `${achievement.description} 🌟 Keep up the amazing work!`,
             duration: 5000
           })
         })
@@ -336,7 +336,7 @@ function App() {
             <MobileNavigation activeTab={activeTab} onTabChange={setActiveTab} />
             <div className="text-left flex-1 min-w-0">
               <div className="flex items-center gap-2 md:gap-3">
-                <div className="w-8 h-8 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg flex-shrink-0">
+                <div className="w-8 h-8 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-primary via-accent to-purple-500 flex items-center justify-center shadow-lg flex-shrink-0 animate-pulse">
                   <Clock size={16} className="text-white md:size-7" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -344,7 +344,7 @@ function App() {
                     StudyFlow
                   </h1>
                   <p className="text-muted-foreground font-ui text-xs md:text-lg hidden md:block font-medium">
-                    Smart study sessions with rich note-taking
+                    🚀 Ignite your learning journey with smart study sessions
                   </p>
                 </div>
               </div>
@@ -364,36 +364,36 @@ function App() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {/* Desktop tabs - hidden on mobile */}
-          <TabsList className="hidden md:grid w-full grid-cols-6 mb-8 modern-tabs p-1 bg-white/60 backdrop-blur-xl border border-white/20 shadow-lg">
+          <TabsList className="hidden md:grid w-full grid-cols-6 mb-8 modern-tabs p-1 bg-gradient-to-r from-white/70 via-blue-50/80 to-purple-50/70 backdrop-blur-xl border border-blue-200/30 shadow-lg">
             <TabsTrigger value="timer" className="flex items-center gap-2 font-ui font-medium rounded-lg transition-all">
               <Clock size={18} />
-              Timer
+              ⏰ Timer
             </TabsTrigger>
             <TabsTrigger value="notes" className="flex items-center gap-2 font-ui font-medium rounded-lg transition-all">
               <BookOpen size={18} />
-              Notes
+              📝 Notes
             </TabsTrigger>
             <TabsTrigger value="streaks" className="flex items-center gap-2 font-ui font-medium rounded-lg transition-all">
               <Flame size={18} />
-              Streaks
+              🔥 Streaks
             </TabsTrigger>
             <TabsTrigger value="dashboard" className="flex items-center gap-2 font-ui font-medium rounded-lg transition-all">
               <ChartBar size={18} />
-              Dashboard
+              📊 Dashboard
             </TabsTrigger>
             <TabsTrigger value="history" className="flex items-center gap-2 font-ui font-medium rounded-lg transition-all">
               <ClockCounterClockwise size={18} />
-              History
+              📚 History
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2 font-ui font-medium rounded-lg transition-all">
               <Gear size={18} />
-              Settings
+              ⚙️ Settings
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="timer" className="space-y-4 md:space-y-6 mt-2 md:mt-8">
             <div className="enhanced-card mobile-card-content">
-              <PageTitle title="Study Timer" description="Focus sessions with break management" />
+              <PageTitle title="🎯 Study Timer" description="Focus sessions with break management - You've got this! 💪" />
               <StudyTimer
                 settings={safeSettings}
                 topics={safeTopics}
@@ -407,7 +407,7 @@ function App() {
 
           <TabsContent value="notes" className="space-y-4 md:space-y-6 mt-2 md:mt-8">
             <div className="enhanced-card mobile-card-content">
-              <PageTitle title="Session Notes" description="View and export your study notes" />
+              <PageTitle title="✨ Session Notes" description="Your brilliant ideas and insights await! 📝✨" />
               <SessionNotes 
                 sessions={safeSessions} 
                 settings={safeSettings}
@@ -419,7 +419,7 @@ function App() {
 
           <TabsContent value="streaks" className="space-y-4 md:space-y-6 mt-2 md:mt-8">
             <div className="enhanced-card mobile-card-content">
-              <PageTitle title="Study Streaks" description="Track your progress and achievements" />
+              <PageTitle title="🔥 Study Streaks" description="Build unstoppable momentum - Every day counts! 🚀" />
               <StreakTracker
                 streakData={safeStreakData}
                 achievements={safeAchievements}
@@ -433,14 +433,14 @@ function App() {
 
           <TabsContent value="dashboard" className="space-y-4 md:space-y-6 mt-2 md:mt-8">
             <div className="enhanced-card mobile-card-content">
-              <PageTitle title="Analytics Dashboard" description="Detailed study statistics and trends" />
+              <PageTitle title="📊 Analytics Dashboard" description="See your incredible progress and growth! 📈🌟" />
               <Dashboard sessions={safeSessions} streakData={safeStreakData} achievements={safeAchievements} />
             </div>
           </TabsContent>
 
           <TabsContent value="history" className="space-y-4 md:space-y-6 mt-2 md:mt-8">
             <div className="enhanced-card mobile-card-content">
-              <PageTitle title="Session History" description="Review your past study sessions" />
+              <PageTitle title="📚 Session History" description="Celebrate your learning journey and achievements! 🎉" />
               <SessionHistory 
                 sessions={safeSessions}
                 onDeleteSession={deleteSession}
@@ -450,7 +450,7 @@ function App() {
 
           <TabsContent value="settings" className="space-y-4 md:space-y-6 mt-2 md:mt-8">
             <div className="enhanced-card mobile-card-content">
-              <PageTitle title="Settings" description="Customize your study experience" />
+              <PageTitle title="⚙️ Settings" description="Customize your perfect learning environment! 🎨" />
               <Settings
                 settings={safeSettings}
                 onSettingsChange={setSettings}
