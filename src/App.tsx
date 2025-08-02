@@ -330,17 +330,24 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto max-w-4xl p-3 md:p-4">
-        <header className="flex items-center justify-between py-3 md:py-8">
-          <div className="flex items-center gap-3 md:gap-4">
+      <div className="container mx-auto max-w-5xl p-3 md:p-6">
+        <header className="flex items-center justify-between py-4 md:py-10 mb-2 md:mb-6">
+          <div className="flex items-center gap-4 md:gap-6">
             <MobileNavigation activeTab={activeTab} onTabChange={setActiveTab} />
             <div className="text-center md:text-left">
-              <h1 className="font-display text-xl md:text-4xl font-bold text-foreground mb-0 md:mb-2">
-                StudyFlow
-              </h1>
-              <p className="text-muted-foreground font-ui text-xs md:text-base hidden md:block">
-                Smart study sessions with rich note-taking
-              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
+                  <Clock size={20} className="text-white md:size-7" />
+                </div>
+                <div>
+                  <h1 className="font-display text-xl md:text-5xl font-bold mb-0 md:mb-1">
+                    StudyFlow
+                  </h1>
+                  <p className="text-muted-foreground font-ui text-xs md:text-lg hidden md:block font-medium">
+                    Smart study sessions with rich note-taking
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
           
@@ -349,7 +356,7 @@ function App() {
             variant={activeTab === 'settings' ? 'default' : 'outline'}
             size="icon"
             onClick={() => setActiveTab('settings')}
-            className="md:hidden"
+            className="md:hidden enhanced-card"
           >
             <Gear size={20} />
           </Button>
@@ -357,90 +364,102 @@ function App() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {/* Desktop tabs - hidden on mobile */}
-          <TabsList className="hidden md:grid w-full grid-cols-6 mb-8">
-            <TabsTrigger value="timer" className="flex items-center gap-2 font-ui">
+          <TabsList className="hidden md:grid w-full grid-cols-6 mb-8 modern-tabs p-1 bg-white/60 backdrop-blur-xl border border-white/20 shadow-lg">
+            <TabsTrigger value="timer" className="flex items-center gap-2 font-ui font-medium rounded-lg transition-all">
               <Clock size={18} />
               Timer
             </TabsTrigger>
-            <TabsTrigger value="notes" className="flex items-center gap-2 font-ui">
+            <TabsTrigger value="notes" className="flex items-center gap-2 font-ui font-medium rounded-lg transition-all">
               <BookOpen size={18} />
               Notes
             </TabsTrigger>
-            <TabsTrigger value="streaks" className="flex items-center gap-2 font-ui">
+            <TabsTrigger value="streaks" className="flex items-center gap-2 font-ui font-medium rounded-lg transition-all">
               <Flame size={18} />
               Streaks
             </TabsTrigger>
-            <TabsTrigger value="dashboard" className="flex items-center gap-2 font-ui">
+            <TabsTrigger value="dashboard" className="flex items-center gap-2 font-ui font-medium rounded-lg transition-all">
               <ChartBar size={18} />
               Dashboard
             </TabsTrigger>
-            <TabsTrigger value="history" className="flex items-center gap-2 font-ui">
+            <TabsTrigger value="history" className="flex items-center gap-2 font-ui font-medium rounded-lg transition-all">
               <ClockCounterClockwise size={18} />
               History
             </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2 font-ui">
+            <TabsTrigger value="settings" className="flex items-center gap-2 font-ui font-medium rounded-lg transition-all">
               <Gear size={18} />
               Settings
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="timer" className="space-y-6 mt-4 md:mt-6">
-            <PageTitle title="Study Timer" description="Focus sessions with break management" />
-            <StudyTimer
-              settings={safeSettings}
-              topics={safeTopics}
-              subtopics={safeSubtopics}
-              onSessionComplete={addSession}
-              onTopicUpdate={updateTopics}
-              onSwitchToNotes={() => setActiveTab('notes')}
-            />
+          <TabsContent value="timer" className="space-y-6 mt-4 md:mt-8">
+            <div className="enhanced-card p-6 md:p-8">
+              <PageTitle title="Study Timer" description="Focus sessions with break management" />
+              <StudyTimer
+                settings={safeSettings}
+                topics={safeTopics}
+                subtopics={safeSubtopics}
+                onSessionComplete={addSession}
+                onTopicUpdate={updateTopics}
+                onSwitchToNotes={() => setActiveTab('notes')}
+              />
+            </div>
           </TabsContent>
 
-          <TabsContent value="notes" className="space-y-6 mt-4 md:mt-6">
-            <PageTitle title="Session Notes" description="View and export your study notes" />
-            <SessionNotes 
-              sessions={safeSessions} 
-              settings={safeSettings}
-              onEditSession={editSession}
-              onDeleteSession={deleteSession}
-            />
+          <TabsContent value="notes" className="space-y-6 mt-4 md:mt-8">
+            <div className="enhanced-card p-6 md:p-8">
+              <PageTitle title="Session Notes" description="View and export your study notes" />
+              <SessionNotes 
+                sessions={safeSessions} 
+                settings={safeSettings}
+                onEditSession={editSession}
+                onDeleteSession={deleteSession}
+              />
+            </div>
           </TabsContent>
 
-          <TabsContent value="streaks" className="space-y-6 mt-4 md:mt-6">
-            <PageTitle title="Study Streaks" description="Track your progress and achievements" />
-            <StreakTracker
-              streakData={safeStreakData}
-              achievements={safeAchievements}
-              sessions={safeSessions}
-              onUpdateWeeklyGoal={(goal) => {
-                setStreakData(current => ({ ...(current || safeStreakData), weeklyGoal: goal }))
-              }}
-            />
+          <TabsContent value="streaks" className="space-y-6 mt-4 md:mt-8">
+            <div className="enhanced-card p-6 md:p-8">
+              <PageTitle title="Study Streaks" description="Track your progress and achievements" />
+              <StreakTracker
+                streakData={safeStreakData}
+                achievements={safeAchievements}
+                sessions={safeSessions}
+                onUpdateWeeklyGoal={(goal) => {
+                  setStreakData(current => ({ ...(current || safeStreakData), weeklyGoal: goal }))
+                }}
+              />
+            </div>
           </TabsContent>
 
-          <TabsContent value="dashboard" className="space-y-6 mt-4 md:mt-6">
-            <PageTitle title="Analytics Dashboard" description="Detailed study statistics and trends" />
-            <Dashboard sessions={safeSessions} streakData={safeStreakData} achievements={safeAchievements} />
+          <TabsContent value="dashboard" className="space-y-6 mt-4 md:mt-8">
+            <div className="enhanced-card p-6 md:p-8">
+              <PageTitle title="Analytics Dashboard" description="Detailed study statistics and trends" />
+              <Dashboard sessions={safeSessions} streakData={safeStreakData} achievements={safeAchievements} />
+            </div>
           </TabsContent>
 
-          <TabsContent value="history" className="space-y-6 mt-4 md:mt-6">
-            <PageTitle title="Session History" description="Review your past study sessions" />
-            <SessionHistory 
-              sessions={safeSessions}
-              onDeleteSession={deleteSession}
-            />
+          <TabsContent value="history" className="space-y-6 mt-4 md:mt-8">
+            <div className="enhanced-card p-6 md:p-8">
+              <PageTitle title="Session History" description="Review your past study sessions" />
+              <SessionHistory 
+                sessions={safeSessions}
+                onDeleteSession={deleteSession}
+              />
+            </div>
           </TabsContent>
 
-          <TabsContent value="settings" className="space-y-6 mt-4 md:mt-6">
-            <PageTitle title="Settings" description="Customize your study experience" />
-            <Settings
-              settings={safeSettings}
-              onSettingsChange={setSettings}
-              topics={safeTopics}
-              subtopics={safeSubtopics}
-              onTopicsChange={setTopics}
-              onSubtopicsChange={setSubtopics}
-            />
+          <TabsContent value="settings" className="space-y-6 mt-4 md:mt-8">
+            <div className="enhanced-card p-6 md:p-8">
+              <PageTitle title="Settings" description="Customize your study experience" />
+              <Settings
+                settings={safeSettings}
+                onSettingsChange={setSettings}
+                topics={safeTopics}
+                subtopics={safeSubtopics}
+                onTopicsChange={setTopics}
+                onSubtopicsChange={setSubtopics}
+              />
+            </div>
           </TabsContent>
         </Tabs>
       </div>

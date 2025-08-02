@@ -7,12 +7,12 @@ interface PageTitleProps {
 
 export const PageTitle = memo(function PageTitle({ title, description }: PageTitleProps) {
   return (
-    <div className="mb-6 md:hidden">
-      <h2 className="font-display text-xl font-bold text-foreground mb-1">
+    <div className="mb-8">
+      <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">
         {title}
       </h2>
       {description && (
-        <p className="text-sm text-muted-foreground font-ui">
+        <p className="text-base md:text-lg text-muted-foreground font-ui font-medium">
           {description}
         </p>
       )}
