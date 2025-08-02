@@ -5,48 +5,54 @@
 }
 
 :root {
-  --background: oklch(0.98 0.008 85);
-  --foreground: oklch(0.15 0.02 260);
+  /* Study-focused theme: warm amber backgrounds with deep forest green accents */
+  --background: oklch(0.97 0.02 85);
+  --foreground: oklch(0.20 0.03 180);
 
-  --card: oklch(1.0 0 0);
-  --card-foreground: oklch(0.15 0.02 260);
-  --popover: oklch(1.0 0 0);
-  --popover-foreground: oklch(0.15 0.02 260);
+  --card: oklch(0.99 0.005 80);
+  --card-foreground: oklch(0.20 0.03 180);
+  --popover: oklch(0.99 0.005 80);
+  --popover-foreground: oklch(0.20 0.03 180);
 
-  --primary: oklch(0.55 0.18 250);
-  --primary-foreground: oklch(0.98 0.008 85);
-  --secondary: oklch(0.94 0.02 260);
-  --secondary-foreground: oklch(0.35 0.05 260);
-  --muted: oklch(0.96 0.01 260);
-  --muted-foreground: oklch(0.45 0.03 260);
-  --accent: oklch(0.65 0.15 210);
-  --accent-foreground: oklch(0.98 0.008 85);
+  /* Deep forest green for primary actions - represents growth and focus */
+  --primary: oklch(0.45 0.12 160);
+  --primary-foreground: oklch(0.98 0.005 80);
+  /* Warm sage green for secondary elements */
+  --secondary: oklch(0.92 0.02 140);
+  --secondary-foreground: oklch(0.35 0.08 160);
+  /* Soft warm beige for muted elements */
+  --muted: oklch(0.94 0.015 70);
+  --muted-foreground: oklch(0.50 0.04 150);
+  /* Golden amber for accents - represents enlightenment and achievement */
+  --accent: oklch(0.70 0.15 80);
+  --accent-foreground: oklch(0.20 0.03 180);
   --destructive: oklch(0.58 0.22 25);
-  --destructive-foreground: oklch(0.98 0.008 85);
+  --destructive-foreground: oklch(0.98 0.005 80);
 
-  --border: oklch(0.92 0.015 260);
-  --input: oklch(0.92 0.015 260);
-  --ring: oklch(0.55 0.18 250);
+  --border: oklch(0.90 0.02 120);
+  --input: oklch(0.90 0.02 120);
+  --ring: oklch(0.45 0.12 160);
 
   --radius: 0.75rem;
 
-  --chart-1: oklch(0.55 0.18 250);
-  --chart-2: oklch(0.65 0.15 210);
-  --chart-3: oklch(0.60 0.12 160);
-  --chart-4: oklch(0.50 0.15 320);
-  --chart-5: oklch(0.70 0.10 90);
+  /* Study-themed chart colors */
+  --chart-1: oklch(0.45 0.12 160); /* Deep forest green */
+  --chart-2: oklch(0.70 0.15 80);  /* Golden amber */
+  --chart-3: oklch(0.55 0.10 140); /* Sage green */
+  --chart-4: oklch(0.65 0.12 40);  /* Warm terracotta */
+  --chart-5: oklch(0.60 0.08 200); /* Muted teal */
 
-  --sidebar: oklch(0.96 0.01 260);
-  --sidebar-foreground: oklch(0.15 0.02 260);
-  --sidebar-primary: oklch(0.55 0.18 250);
-  --sidebar-primary-foreground: oklch(0.98 0.008 85);
-  --sidebar-accent: oklch(0.94 0.02 260);
-  --sidebar-accent-foreground: oklch(0.35 0.05 260);
-  --sidebar-border: oklch(0.92 0.015 260);
-  --sidebar-ring: oklch(0.55 0.18 250);
+  --sidebar: oklch(0.94 0.015 70);
+  --sidebar-foreground: oklch(0.20 0.03 180);
+  --sidebar-primary: oklch(0.45 0.12 160);
+  --sidebar-primary-foreground: oklch(0.98 0.005 80);
+  --sidebar-accent: oklch(0.92 0.02 140);
+  --sidebar-accent-foreground: oklch(0.35 0.08 160);
+  --sidebar-border: oklch(0.90 0.02 120);
+  --sidebar-ring: oklch(0.45 0.12 160);
 
-  --shadow-color: oklch(0.55 0.18 250);
-  --shadow-opacity: 0.12;
+  --shadow-color: oklch(0.45 0.12 160);
+  --shadow-opacity: 0.08;
   --shadow-blur: 24px;
   --shadow-spread: 0px;
   --shadow-offset-x: 0px;
@@ -96,12 +102,12 @@
   body {
     @apply bg-background text-foreground font-body;
     font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-    background: linear-gradient(135deg, var(--background) 0%, oklch(0.96 0.015 270) 100%);
+    background: linear-gradient(135deg, var(--background) 0%, oklch(0.95 0.025 100) 100%);
   }
   
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
-    background: linear-gradient(135deg, var(--foreground) 0%, oklch(0.25 0.05 250) 100%);
+    background: linear-gradient(135deg, var(--foreground) 0%, oklch(0.35 0.08 160) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -150,12 +156,12 @@
       inset 0 1px 0 rgba(255,255,255,0.5);
   }
 
-  /* Premium button styling */
+  /* Premium button styling with study theme */
   .premium-button {
     background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
     box-shadow: 
-      0 4px 16px rgba(85, 90, 255, 0.3),
-      0 2px 8px rgba(85, 90, 255, 0.15);
+      0 4px 16px rgba(76, 153, 102, 0.3),
+      0 2px 8px rgba(76, 153, 102, 0.15);
     border: none;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -163,8 +169,8 @@
   .premium-button:hover {
     transform: translateY(-1px);
     box-shadow: 
-      0 8px 24px rgba(85, 90, 255, 0.4),
-      0 4px 12px rgba(85, 90, 255, 0.2);
+      0 8px 24px rgba(76, 153, 102, 0.4),
+      0 4px 12px rgba(76, 153, 102, 0.2);
   }
 
   .premium-button:active {
@@ -422,7 +428,7 @@
     position: relative;
     background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
     color: white;
-    box-shadow: 0 2px 8px rgba(85, 90, 255, 0.3);
+    box-shadow: 0 2px 8px rgba(76, 153, 102, 0.3);
   }
   
   .settings-tabs [data-state="active"]::before {
@@ -449,14 +455,14 @@
   .settings-card:hover {
     transform: translateY(-1px);
     box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-    border-color: rgba(85, 90, 255, 0.2);
+    border-color: rgba(76, 153, 102, 0.2);
   }
 
   /* Tab styling improvements */
   .modern-tabs [data-state="active"] {
     background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
     color: white;
-    box-shadow: 0 2px 8px rgba(85, 90, 255, 0.3);
+    box-shadow: 0 2px 8px rgba(76, 153, 102, 0.3);
     border: none;
   }
 
@@ -469,7 +475,7 @@
 
   .modern-tabs [data-state="inactive"]:hover {
     background: rgba(255,255,255,0.8);
-    border-color: rgba(85, 90, 255, 0.2);
+    border-color: rgba(76, 153, 102, 0.2);
   }
 
   /* Status indicators */
@@ -496,6 +502,6 @@
   input:focus, textarea:focus, select:focus {
     background: rgba(255,255,255,0.95);
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(85, 90, 255, 0.1);
+    box-shadow: 0 0 0 3px rgba(76, 153, 102, 0.1);
   }
 }
